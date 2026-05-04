@@ -15,15 +15,15 @@ export const BASE_PRICES = {
 // ── Camera coverage adders (added on top of base tier price) ──────────────────
 export const CAMERA_ADDERS = {
   'front-only':    { low: 300,  high: 450  },
-  'perimeter':     { low: 600,  high: 850  },
-  'full-coverage': { low: 950,  high: 1400 },
+  'perimeter':     { low: 1200,  high: 2000  },
+  'full-coverage': { low: 1500,  high: 2600 },
 } as const;
 
 // ── Entry point adders ────────────────────────────────────────────────────────
 // Applied per unit beyond the baseline (1 door, 2 windows)
 export const ENTRY_POINT_ADDERS = {
-  door:   { low: 35, high: 55 },  // per exterior door beyond 1
-  window: { low: 25, high: 40 },  // per ground-floor window beyond 2
+  door:   { low: 99, high: 130 },  // per exterior door beyond 1
+  window: { low: 99, high: 130 },  // per ground-floor window beyond 2
 } as const;
 
 // ── Monthly monitoring range ───────────────────────────────────────────────────
@@ -33,23 +33,23 @@ export const MONITORING_RANGE = { low: 49.99, high: 89.99 } as const;
 // When a customer adjusts equipment quantities, the estimate shifts by these
 // per-unit amounts. Items with low/high of 0 are included at no extra cost.
 export const UNIT_PRICES: Record<string, { low: number; high: number }> = {
-  'Central Control Panel':          { low: 250, high: 350 },
-  'Door Sensor':                    { low: 30,  high: 50  },
-  'Door Sensors':                   { low: 30,  high: 50  },
-  'Window Sensor':                  { low: 22,  high: 38  },
-  'Window Sensors':                 { low: 22,  high: 38  },
-  '4K Outdoor Camera — Front':      { low: 180, high: 260 },
-  '4K Outdoor Camera — Perimeter':  { low: 180, high: 260 },
-  '4K Indoor Camera':               { low: 140, high: 200 },
-  '4K Video Doorbell':              { low: 220, high: 320 },
-  'Motion Detector':                { low: 60,  high: 90  },
-  'Motion Detectors':               { low: 60,  high: 90  },
+  'Central Control Panel':          { low: 400, high: 800 },
+  'Door Sensor':                    { low: 99, high: 130 },
+  'Door Sensors':                   { low: 99, high: 130 },
+  'Window Sensor':                  { low: 99, high: 130 },
+  'Window Sensors':                 { low: 99, high: 130 },
+  '4K Outdoor Camera — Front':      { low: 300,  high: 450  },
+  '4K Outdoor Camera — Perimeter':  { low: 300,  high: 450  },
+  '4K Indoor Camera':               { low: 200,  high: 350  },
+  '4K Video Doorbell':              { low: 300,  high: 450  },
+  'Motion Detector':                { low: 130,  high: 200  },
+  'Motion Detectors':               { low: 130,  high: 200  },
   'Smart Lock':                     { low: 280, high: 400 },
   'Smart Home Hub':                 { low: 180, high: 260 },
   'Mobile App & Remote Access':     { low: 0,   high: 0   },
   'Alarm.com Premium Integration':  { low: 0,   high: 0   },
-  'Smoke / CO Detector':            { low: 80,  high: 120 },
-  'Water Leak Sensor':              { low: 55,  high: 85  },
+  'Smoke / CO Detector':            { low: 120,  high: 175 },
+  'Water Leak Sensor':              { low: 100,  high: 250  },
 };
 
 // Fallback price for any equipment item not explicitly listed above
