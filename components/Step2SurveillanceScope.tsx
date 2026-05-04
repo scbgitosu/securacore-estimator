@@ -1,0 +1,83 @@
+'use client';
+
+import type { SystemConfig, CameraScope } from '@/types';
+import { CoverageIcon } from './CoverageIcon';
+
+const CAMERA_OPTIONS: { id: CameraScope; label: string; cameras: string; desc: string }[] = [
+  {
+    id: 'front-only',
+    label: 'Front / Entrance',
+    cameras: '1 Camera',
+    desc: 'Single 4K camera covering the main entrance and driveway approach.',
+  },
+  {
+    id: 'perimeter',
+    label: 'Perimeter Coverage',
+    cameras: '4 Cameras',
+    desc: 'Four 4K cameras covering all exterior sides — front, rear, and both flanks.',
+  },
+  {
+    id: 'full-coverage',
+    label: 'Full Interior / Exterior',
+    cameras: '6 Cameras',
+    desc: 'Complete exterior perimeter plus key interior spaces. 2TB NVR storage available upon request.',
+  },
+];
+
+function CheckIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+      <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+interface Props {
+  cfg: SystemConfig;
+  setCfg: React.Dispatch<React.SetStateAction<SystemConfig>>;
+}
+
+export function Step2SurveillanceScope({ cfg, setCfg }: Props) {
+  const set = <K extends keyof SystemConfig>(k: K, v: SystemConfig[K]) =>
+    setCfg(p => ({ ...p, [k]: v }));
+
+  return (
+    <div>
+      <p className="step-eyebrow">Step 2 of 4</p>
+      <h2 className="step-title">Surveillance Scope</h2>
+      <p className="step-subtitle">Choose the camera coverage level that fits your property and peace of mind.</p>
+
+      <div className="option-grid cols-3">
+        {CAMERA_OPTIONS.map(opt => {
+          const selected = cfg.cameraScope === opt.id;
+          return (
+            <div
+              key={opt.id}
+              className={`coverage-card${selected ? ' selected' : ''}`}
+              onClick={() => set('cameraScope', opt.id)}
+            >
+              <div className="coverage-icon-wrap">
+                <CoverageIcon type={opt.id} selected={selected} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
+                <div className="coverage-label">{opt.label}</div>
+                <div className="coverage-count">{opt.cameras}</div>
+              </div>
+              <div className="coverage-desc">{opt.desc}</div>
+              <div style={{
+                width: 20, height: 20, borderRadius: '50%',
+                border: `2px solid ${selected ? 'var(--sc-orange)' : 'var(--border-default)'}`,
+                background: selected ? 'var(--sc-orange)' : '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginTop: 4, flexShrink: 0,
+                transition: 'all .2s',
+              }}>
+                {selected && <CheckIcon />}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
