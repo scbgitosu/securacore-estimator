@@ -47,13 +47,13 @@ export const MONITORING_RANGE = { low: 44.99, high: 79.99 } as const;
 // When a customer adjusts equipment quantities, the estimate shifts by these
 // per-unit amounts. Items with low/high of 0 are included at no extra cost.
 export const UNIT_PRICES: Record<string, { low: number; high: number }> = {
-  '7" Wall/Counter Security Control Panel': { low: 400, high: 800 },
+  '7" Wall/Counter Security Control Panel': { low: 500, high: 800 },
   'Door Sensors':                   { low: 99,  high: 130 },
   'Outdoor Camera':                 { low: 300, high: 450 },
   'Indoor Camera':                  { low: 200, high: 350 },
   '24/7 Onboard Recording':         { low: 0,   high: 0   },
   'Video Doorbell':                 { low: 300, high: 450 },
-  'Motion Detectors':               { low: 130, high: 200 },
+  'Motion Detectors':               { low: 90, high: 120 },
   'Smoke Detectors':                { low: 120,  high: 175  },
   'Carbon Monoxide Detector':       { low: 120,  high: 175  },
   'Smart Lock - Keyless Entry':     { low: 280, high: 400 },
