@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import type { SystemConfig } from '@/types';
-import { buildEquipment } from '@/lib/equipment';
+import { buildFullEquipmentCatalog } from '@/lib/equipment';
 import { computeBasePricing, computeAdjustedPricing } from '@/lib/pricing';
 import { MONITORING_RANGE } from '@/pricing-config';
 
@@ -18,6 +18,13 @@ const CAMERA_SCOPE_LABELS: Record<string, string> = {
   'front-only':    'Front / Entrance Only',
   'perimeter':     'Perimeter Coverage',
   'full-coverage': 'Full Interior / Exterior',
+  'no-surveillance': 'No Surveillance',
+};
+
+const HOME_SIZE_LABELS: Record<string, string> = {
+  small:  'Small (1500–2500 sq ft)',
+  medium: 'Medium (2500–3500 sq ft)',
+  large:  'Large (exceeds 3500 sq ft)',
 };
 
 interface Props {
@@ -26,35 +33,50 @@ interface Props {
 }
 
 export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
-  const equipment = buildEquipment(cfg);
+  const equipment = useMemo(
+    () => buildFullEquipmentCatalog(cfg),
+    [cfg.tier, cfg.cameraScope, cfg.doors]
+  );
   const basePricing = computeBasePricing(cfg)!;
 
-  const equipKey = equipment.map(e => e.name).join('|');
+  const equipKey = equipment.map(e => `${e.name}:${e.baseQty}`).join('|');
 
-  const [qtys, setQtys] = useState<Record<number, number>>(() =>
-    Object.fromEntries(equipment.map((item, i) => [i, item.baseQty]))
+  const [qtys, setQtys] = useState<Record<string, number>>(() =>
+    Object.fromEntries(equipment.map(item => [item.name, item.baseQty]))
   );
 
   useEffect(() => {
-    setQtys(Object.fromEntries(equipment.map((item, i) => [i, item.baseQty])));
+    setQtys(Object.fromEntries(equipment.map(item => [item.name, item.baseQty])));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [equipKey]);
 
   const adjustedPricing = useMemo(
     () => computeAdjustedPricing(basePricing, equipment, qtys),
-    [qtys, equipKey, basePricing]
+    [qtys, equipment, basePricing]
   );
+
+  const sortedEquipment = useMemo(() => {
+    const catalogOrder = new Map(equipment.map((item, i) => [item.name, i]));
+    return [...equipment].sort((a, b) => {
+      const qa = qtys[a.name] ?? a.baseQty;
+      const qb = qtys[b.name] ?? b.baseQty;
+      const unusedA = qa === 0 ? 1 : 0;
+      const unusedB = qb === 0 ? 1 : 0;
+      if (unusedA !== unusedB) return unusedA - unusedB;
+      return (catalogOrder.get(a.name) ?? 0) - (catalogOrder.get(b.name) ?? 0);
+    });
+  }, [equipment, qtys]);
 
   const priceChanged =
     adjustedPricing.low !== basePricing.low || adjustedPricing.high !== basePricing.high;
 
-  function setQty(i: number, val: number) {
-    setQtys(p => ({ ...p, [i]: Math.max(0, val) }));
+  function setQty(name: string, val: number) {
+    setQtys(p => ({ ...p, [name]: Math.max(0, val) }));
   }
 
   function buildEquipmentListText() {
     const selectedItems = equipment
-      .map((item, i) => ({ name: item.name, qty: qtys[i] ?? item.baseQty }))
+      .map(item => ({ name: item.name, qty: qtys[item.name] ?? item.baseQty }))
       .filter(item => item.qty > 0)
       .map(item => `${item.name} x${item.qty}`);
 
@@ -70,7 +92,10 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
           <div className="config-chips">
             <span className="config-chip">{HOME_TYPE_LABELS[cfg.homeType!] ?? '—'}</span>
             <span className="config-chip">
-              {cfg.doors}{cfg.doors !== 1 ? ' Doors' : ' Door'} · {cfg.windows}{cfg.windows !== 1 ? ' Windows' : ' Window'}
+              {cfg.doors}{cfg.doors !== 1 ? ' Doors' : ' Door'}
+            </span>
+            <span className="config-chip">
+              {cfg.homeSize ? HOME_SIZE_LABELS[cfg.homeSize] ?? cfg.homeSize : '—'}
             </span>
             <span className="config-chip">{CAMERA_SCOPE_LABELS[cfg.cameraScope!] ?? '—'}</span>
           </div>
@@ -87,12 +112,12 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
             </div>
           </div>
           <div className="equipment-list">
-            {equipment.map((item, i) => {
-              const qty = qtys[i] ?? item.baseQty;
+            {sortedEquipment.map(item => {
+              const qty = qtys[item.name] ?? item.baseQty;
               const removed = qty === 0;
               return (
                 <div
-                  key={i}
+                  key={item.name}
                   className="equipment-row"
                   style={{ opacity: removed ? 0.35 : 1, transition: 'opacity .2s' }}
                 >
@@ -103,11 +128,11 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', overflow: 'hidden', flexShrink: 0 }}>
-                    <QtyBtn onClick={() => setQty(i, qty - 1)} label="−" />
+                    <QtyBtn onClick={() => setQty(item.name, qty - 1)} label="−" />
                     <span style={{ minWidth: 28, textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: removed ? 'var(--sc-grey-400)' : 'var(--sc-ink)', padding: '0 4px' }}>
                       {qty}
                     </span>
-                    <QtyBtn onClick={() => setQty(i, qty + 1)} label="+" />
+                    <QtyBtn onClick={() => setQty(item.name, qty + 1)} label="+" />
                   </div>
                 </div>
               );

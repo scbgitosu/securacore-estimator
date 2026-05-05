@@ -1,11 +1,12 @@
 export type HomeType = 'single-family' | 'condo' | 'townhouse' | 'business';
-export type CameraScope = 'front-only' | 'perimeter' | 'full-coverage';
+export type HomeSize = 'small' | 'medium' | 'large';
+export type CameraScope = 'front-only' | 'perimeter' | 'full-coverage' | 'no-surveillance';
 export type Tier = 'Essential' | 'Complete' | 'Ultimate';
 
 export interface SystemConfig {
   homeType: HomeType | null;
   doors: number;
-  windows: number;
+  homeSize: HomeSize | null;
   cameraScope: CameraScope | null;
   tier: Tier | null;
 }

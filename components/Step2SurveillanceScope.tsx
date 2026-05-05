@@ -7,20 +7,26 @@ const CAMERA_OPTIONS: { id: CameraScope; label: string; cameras: string; desc: s
   {
     id: 'front-only',
     label: 'Front / Entrance',
-    cameras: '1 Camera',
-    desc: 'Single 4K camera covering the main entrance and driveway approach.',
+    cameras: '1 Camera + 1 Doorbell',
+    desc: 'Outdoor surveillance camera\nCovering your driveway\nVideo doorbell',
   },
   {
     id: 'perimeter',
     label: 'Perimeter Coverage',
-    cameras: '4 Cameras',
-    desc: 'Four 4K cameras covering all exterior sides — front, rear, and both flanks.',
+    cameras: '4 Cameras + 1 Doorbell',
+    desc: 'Four outdoor surveillance cameras covering your perimeter\nVideo Doorbell',
   },
   {
     id: 'full-coverage',
     label: 'Full Interior / Exterior',
-    cameras: '6 Cameras',
-    desc: 'Complete exterior perimeter plus key interior spaces. 2TB NVR storage available upon request.',
+    cameras: '5 Cameras + 1 Doorbell',
+    desc: 'Four outdoor surveillance cameras\nOne interior surveillance camera\nVideo Doorbell\n24/7 onboard recording',
+  },
+  {
+    id: 'no-surveillance',
+    label: 'No Surveillance',
+    cameras: '0 Cameras',
+    desc: 'Skip camera coverage and continue with intrusion-focused protection only.',
   },
 ];
 
@@ -43,9 +49,14 @@ export function Step2SurveillanceScope({ cfg, setCfg }: Props) {
 
   return (
     <div>
-      <p className="step-eyebrow">Step 2 of 4</p>
+      <p className="step-eyebrow">Step 3 of 4</p>
       <h2 className="step-title">Surveillance Scope</h2>
-      <p className="step-subtitle">Choose the camera coverage level that fits your property and peace of mind.</p>
+      <p className="step-subtitle">
+        Choose the camera coverage level that fits your property and peace of mind. Full Interior / Exterior is five cameras plus a video doorbell—four outdoor and one indoor.
+        <em className="step-subtitle-secondary">
+          These selections are flexible, and you can adjust quantities at the end before finalizing.
+        </em>
+      </p>
 
       <div className="option-grid cols-3">
         {CAMERA_OPTIONS.map(opt => {
@@ -63,7 +74,7 @@ export function Step2SurveillanceScope({ cfg, setCfg }: Props) {
                 <div className="coverage-label">{opt.label}</div>
                 <div className="coverage-count">{opt.cameras}</div>
               </div>
-              <div className="coverage-desc">{opt.desc}</div>
+              <div className="coverage-desc" style={{ whiteSpace: 'pre-line' }}>{opt.desc}</div>
               <div style={{
                 width: 20, height: 20, borderRadius: '50%',
                 border: `2px solid ${selected ? 'var(--sc-orange)' : 'var(--border-default)'}`,

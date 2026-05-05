@@ -13,19 +13,16 @@ export function computeBasePricing(cfg: SystemConfig): { low: number; high: numb
   const base = BASE_PRICES[cfg.tier];
   const cam = CAMERA_ADDERS[cfg.cameraScope];
   const extraDoors = Math.max(0, (cfg.doors || 1) - 1);
-  const extraWindows = Math.max(0, (cfg.windows || 2) - 2);
 
   const low =
     base.low +
     cam.low +
-    extraDoors * ENTRY_POINT_ADDERS.door.low +
-    extraWindows * ENTRY_POINT_ADDERS.window.low;
+    extraDoors * ENTRY_POINT_ADDERS.door.low;
 
   const high =
     base.high +
     cam.high +
-    extraDoors * ENTRY_POINT_ADDERS.door.high +
-    extraWindows * ENTRY_POINT_ADDERS.window.high;
+    extraDoors * ENTRY_POINT_ADDERS.door.high;
 
   return {
     low: Math.round(low / 100) * 100,
@@ -40,13 +37,13 @@ export function getUnitPrice(name: string): { low: number; high: number } {
 export function computeAdjustedPricing(
   basePricing: { low: number; high: number },
   equipment: EquipmentItem[],
-  qtys: Record<number, number>
+  qtys: Record<string, number>
 ): { low: number; high: number } {
   let extraLow = 0;
   let extraHigh = 0;
 
-  equipment.forEach((item, i) => {
-    const diff = (qtys[i] ?? item.baseQty) - item.baseQty;
+  equipment.forEach(item => {
+    const diff = (qtys[item.name] ?? item.baseQty) - item.baseQty;
     if (diff !== 0) {
       const up = getUnitPrice(item.name);
       extraLow += diff * up.low;

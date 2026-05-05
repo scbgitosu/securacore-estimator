@@ -1,12 +1,19 @@
 'use client';
 
-import type { SystemConfig, HomeType } from '@/types';
+import type { SystemConfig, HomeType, HomeSize } from '@/types';
+import { DOORS_BY_HOME_TYPE } from '@/pricing-config';
 
 const HOME_TYPES: { id: HomeType; label: string; desc: string }[] = [
   { id: 'single-family', label: 'Single Family', desc: 'Detached house with yard' },
   { id: 'condo',         label: 'Condo',         desc: 'Shared-building unit' },
   { id: 'townhouse',     label: 'Townhouse',      desc: 'Multi-floor attached' },
   { id: 'business',      label: 'Business',       desc: 'Commercial property' },
+];
+
+const HOME_SIZES: { id: HomeSize; label: string }[] = [
+  { id: 'small',  label: 'Small (1500–2500 sq ft)' },
+  { id: 'medium', label: 'Medium (2500–3500 sq ft)' },
+  { id: 'large',  label: 'Large (exceeds 3500 sq ft)' },
 ];
 
 function CheckIcon() {
@@ -41,7 +48,13 @@ export function Step1PropertyProfile({ cfg, setCfg }: Props) {
             <div
               key={t.id}
               className={`option-card${cfg.homeType === t.id ? ' selected' : ''}`}
-              onClick={() => set('homeType', t.id)}
+              onClick={() =>
+                setCfg(p => ({
+                  ...p,
+                  homeType: t.id,
+                  doors: DOORS_BY_HOME_TYPE[t.id],
+                }))
+              }
             >
               <div className="check-ring">{cfg.homeType === t.id && <CheckIcon />}</div>
               <div className="option-label">{t.label}</div>
@@ -61,12 +74,20 @@ export function Step1PropertyProfile({ cfg, setCfg }: Props) {
           </div>
         </div>
         <div className="input-group">
-          <label>Ground Floor Windows</label>
-          <div className="input-stepper">
-            <button className="stepper-btn" disabled={cfg.windows <= 0} onClick={() => set('windows', cfg.windows - 1)}>−</button>
-            <span className="stepper-val">{cfg.windows}</span>
-            <button className="stepper-btn" onClick={() => set('windows', cfg.windows + 1)}>+</button>
-          </div>
+          <label>Home Size</label>
+          <select
+            className="input-select"
+            value={cfg.homeSize ?? ''}
+            onChange={e => {
+              const v = e.target.value;
+              set('homeSize', v === '' ? null : (v as HomeSize));
+            }}
+          >
+            <option value="">Select…</option>
+            {HOME_SIZES.map(s => (
+              <option key={s.id} value={s.id}>{s.label}</option>
+            ))}
+          </select>
         </div>
       </div>
     </div>

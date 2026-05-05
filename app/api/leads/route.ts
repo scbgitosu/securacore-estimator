@@ -4,6 +4,12 @@ import type { LeadPayload } from '@/types';
 const WIX_CONTACTS_URL = 'https://www.wixapis.com/contacts/v4/contacts';
 const WIX_DATA_URL     = 'https://www.wixapis.com/wix-data/v2/items';
 
+const HOME_SIZE_LABELS: Record<string, string> = {
+  small:  'Small (1500–2500 sq ft)',
+  medium: 'Medium (2500–3500 sq ft)',
+  large:  'Large (exceeds 3500 sq ft)',
+};
+
 export async function POST(request: Request) {
   const body: LeadPayload = await request.json();
   const { name, email, phone, address, systemConfig, estimateLow, estimateHigh, equipmentList } = body;
@@ -40,6 +46,8 @@ export async function POST(request: Request) {
           'custom.securityTier':     systemConfig.tier ?? '',
           'custom.cameraScope':      systemConfig.cameraScope ?? '',
           'custom.homeType':         systemConfig.homeType ?? '',
+          'custom.homeSize':
+            systemConfig.homeSize ? HOME_SIZE_LABELS[systemConfig.homeSize] ?? systemConfig.homeSize : '',
           'custom.estimateRange':    `$${estimateLow.toLocaleString()} – $${estimateHigh.toLocaleString()}`,
           'custom.source':           'estimator-calculator',
         },
@@ -78,7 +86,7 @@ export async function POST(request: Request) {
         cameraScope: systemConfig.cameraScope ?? '',
         tier:        systemConfig.tier        ?? '',
         doors:       systemConfig.doors,
-        windows:     systemConfig.windows,
+        homeSize:    systemConfig.homeSize ?? '',
         estimateLow,
         estimateHigh,
         equipmentList: equipmentList ?? '',

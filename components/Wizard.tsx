@@ -10,23 +10,23 @@ import { LeadModal } from './LeadModal';
 
 const STEPS = [
   { label: ['Property', 'Profile'],    short: '01' },
-  { label: ['Surveillance', 'Scope'],  short: '02' },
-  { label: ['Security', 'Tier'],       short: '03' },
+  { label: ['Security', 'Tier'],       short: '02' },
+  { label: ['Surveillance', 'Scope'],  short: '03' },
   { label: ['Investment', 'Summary'],  short: '04' },
 ];
 
 const DEFAULT_CONFIG: SystemConfig = {
   homeType:    null,
   doors:       2,
-  windows:     4,
+  homeSize:    null,
   cameraScope: null,
   tier:        null,
 };
 
 function canAdvance(step: number, cfg: SystemConfig): boolean {
-  if (step === 0) return !!cfg.homeType;
-  if (step === 1) return !!cfg.cameraScope;
-  if (step === 2) return !!cfg.tier;
+  if (step === 0) return !!cfg.homeType && !!cfg.homeSize;
+  if (step === 1) return !!cfg.tier;
+  if (step === 2) return !!cfg.cameraScope;
   return true;
 }
 
@@ -176,8 +176,8 @@ export function Wizard() {
         {/* Step content */}
         <div className="wiz-card" key={animKey}>
           {step === 0 && <Step1PropertyProfile cfg={cfg} setCfg={setCfg} />}
-          {step === 1 && <Step2SurveillanceScope cfg={cfg} setCfg={setCfg} />}
-          {step === 2 && <Step3SecurityTier cfg={cfg} setCfg={setCfg} />}
+          {step === 1 && <Step3SecurityTier cfg={cfg} setCfg={setCfg} />}
+          {step === 2 && <Step2SurveillanceScope cfg={cfg} setCfg={setCfg} />}
           {step === 3 && (
             <Step4InvestmentSummary
               cfg={cfg}

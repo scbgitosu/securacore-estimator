@@ -8,32 +8,32 @@ const TIERS: { id: Tier; tagline: string; popular: boolean; features: string[] }
     tagline: 'Core protection for every entry point.',
     popular: false,
     features: [
-      'Central control panel',
-      'Door & window sensors',
-      'Professional monitoring (Alarm.com)',
-      'Mobile alerts & remote arm/disarm',
+      '7 inch wall/counter security control panel',
+      'Door sensors',
+      'Motion Detectors',
+      '24/7 Professional monitoring',
+      'System control, mobile alerts & remote arm/disarm (alarm.com)',
     ],
   },
   {
     id: 'Complete',
-    tagline: 'Adds video verification at your door.',
+    tagline: 'Adds life safety protection.',
     popular: true,
     features: [
-      'Everything in Essential',
-      '4K video doorbell',
-      'Motion detectors',
-      'Two-way audio',
+      'Everything in Essential Tier',
+      'Smoke detection',
+      'Carbon monoxide detection',
     ],
   },
   {
     id: 'Ultimate',
-    tagline: 'The full suite. Every protection, fully connected.',
+    tagline: 'Adds home automation.',
     popular: false,
     features: [
-      'Everything in Complete',
+      'Everything in Complete Tier',
       'Smart lock & keyless entry',
-      'Smoke, CO & water leak sensors',
-      'Alarm.com Premium integration',
+      'Garage door control & notification',
+      'Water leak detection',
     ],
   },
 ];
@@ -57,9 +57,14 @@ export function Step3SecurityTier({ cfg, setCfg }: Props) {
 
   return (
     <div>
-      <p className="step-eyebrow">Step 3 of 4</p>
+      <p className="step-eyebrow">Step 2 of 4</p>
       <h2 className="step-title">Security Tier</h2>
-      <p className="step-subtitle">Select the level of protection and smart home integration that fits your lifestyle.</p>
+      <p className="step-subtitle">
+        Select the level of protection and smart home integration that fits your lifestyle.
+        <em className="step-subtitle-secondary">
+          These selections are flexible, and you can adjust quantities at the end before finalizing.
+        </em>
+      </p>
 
       <div className="option-grid cols-3">
         {TIERS.map(t => {

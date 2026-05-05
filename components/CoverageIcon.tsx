@@ -1,5 +1,5 @@
 interface Props {
-  type: 'front-only' | 'perimeter' | 'full-coverage';
+  type: 'front-only' | 'perimeter' | 'full-coverage' | 'no-surveillance';
   selected: boolean;
 }
 
@@ -36,6 +36,17 @@ export function CoverageIcon({ type, selected }: Props) {
         <circle cx="50" cy="74" r="3" fill={ink}/><circle cx="50" cy="74" r="1.2" fill={orange}/>
         <circle cx="26" cy="50" r="3" fill={ink}/><circle cx="26" cy="50" r="1.2" fill={orange}/>
         <circle cx="74" cy="50" r="3" fill={ink}/><circle cx="74" cy="50" r="1.2" fill={orange}/>
+      </svg>
+    );
+  }
+
+  if (type === 'no-surveillance') {
+    return (
+      <svg viewBox="0 0 100 100" width="80" height="80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="28" y="28" width="44" height="44" rx="2" stroke={ink} strokeWidth="1.5" fill="white"/>
+        <circle cx="50" cy="50" r="18" fill={fill} stroke={orange} strokeWidth="1.2" strokeDasharray="3 2"/>
+        <line x1="38" y1="38" x2="62" y2="62" stroke={orange} strokeWidth="2.2" strokeLinecap="round"/>
+        <line x1="62" y1="38" x2="38" y2="62" stroke={orange} strokeWidth="2.2" strokeLinecap="round"/>
       </svg>
     );
   }
