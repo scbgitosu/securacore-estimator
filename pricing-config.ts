@@ -7,9 +7,9 @@
 
 // ── Base price ranges by security tier ────────────────────────────────────────
 export const BASE_PRICES = {
-  Essential: { low: 800,  high: 1100 },
-  Complete:  { low: 1200, high: 1600 },
-  Ultimate:  { low: 1900, high: 2600 },
+  Essential: { low: 800,  high: 1200 },
+  Complete:  { low: 1200, high: 1700 },
+  Ultimate:  { low: 1900, high: 2700 },
 } as const;
 
 // ── Camera coverage adders (added on top of base tier price) ──────────────────
