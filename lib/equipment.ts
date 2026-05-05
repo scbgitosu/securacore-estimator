@@ -32,7 +32,6 @@ export function buildEquipment(cfg: SystemConfig): EquipmentItem[] {
 
   if (cfg.tier === 'Ultimate') {
     items.push({ name: 'Smart Lock', baseQty: 1 });
-    items.push({ name: 'Smart Home Hub', baseQty: 1 });
     items.push({ name: 'Mobile App & Remote Access', baseQty: 1 });
     items.push({ name: 'Alarm.com Premium Integration', baseQty: 1 });
     items.push({ name: 'Smoke / CO Detector', baseQty: 1 });

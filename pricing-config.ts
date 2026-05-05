@@ -45,7 +45,6 @@ export const UNIT_PRICES: Record<string, { low: number; high: number }> = {
   'Motion Detector':                { low: 130,  high: 200  },
   'Motion Detectors':               { low: 130,  high: 200  },
   'Smart Lock':                     { low: 280, high: 400 },
-  'Smart Home Hub':                 { low: 180, high: 260 },
   'Mobile App & Remote Access':     { low: 0,   high: 0   },
   'Alarm.com Premium Integration':  { low: 0,   high: 0   },
   'Smoke / CO Detector':            { low: 120,  high: 175 },
