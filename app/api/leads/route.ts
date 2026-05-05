@@ -6,7 +6,7 @@ const WIX_DATA_URL     = 'https://www.wixapis.com/wix-data/v2/items';
 
 export async function POST(request: Request) {
   const body: LeadPayload = await request.json();
-  const { name, email, phone, address, systemConfig, estimateLow, estimateHigh } = body;
+  const { name, email, phone, address, systemConfig, estimateLow, estimateHigh, equipmentList } = body;
 
   const apiKey = process.env.WIX_API_KEY;
   const siteId = process.env.WIX_SITE_ID;
@@ -81,6 +81,7 @@ export async function POST(request: Request) {
         windows:     systemConfig.windows,
         estimateLow,
         estimateHigh,
+        equipmentList: equipmentList ?? '',
       },
     },
   };

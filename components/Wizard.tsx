@@ -58,6 +58,7 @@ export function Wizard() {
   const [step, setStep] = useState(0);
   const [cfg, setCfg] = useState<SystemConfig>(DEFAULT_CONFIG);
   const [showModal, setShowModal] = useState(false);
+  const [equipmentList, setEquipmentList] = useState('');
   const [animKey, setAnimKey] = useState(0);
 
   useEffect(() => {
@@ -177,7 +178,15 @@ export function Wizard() {
           {step === 0 && <Step1PropertyProfile cfg={cfg} setCfg={setCfg} />}
           {step === 1 && <Step2SurveillanceScope cfg={cfg} setCfg={setCfg} />}
           {step === 2 && <Step3SecurityTier cfg={cfg} setCfg={setCfg} />}
-          {step === 3 && <Step4InvestmentSummary cfg={cfg} onRequestQuote={() => setShowModal(true)} />}
+          {step === 3 && (
+            <Step4InvestmentSummary
+              cfg={cfg}
+              onRequestQuote={(list) => {
+                setEquipmentList(list);
+                setShowModal(true);
+              }}
+            />
+          )}
 
           {/* Navigation */}
           {step < 3 ? (
@@ -205,7 +214,7 @@ export function Wizard() {
         </div>
       </main>
 
-      {showModal && <LeadModal cfg={cfg} onClose={() => setShowModal(false)} />}
+      {showModal && <LeadModal cfg={cfg} equipmentList={equipmentList} onClose={() => setShowModal(false)} />}
     </>
   );
 }

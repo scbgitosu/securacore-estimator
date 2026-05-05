@@ -23,4 +23,5 @@ export interface LeadPayload {
   systemConfig: SystemConfig;
   estimateLow: number;
   estimateHigh: number;
+  equipmentList?: string;
 }

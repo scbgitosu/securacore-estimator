@@ -13,10 +13,11 @@ interface FormData {
 
 interface Props {
   cfg: SystemConfig;
+  equipmentList: string;
   onClose: () => void;
 }
 
-export function LeadModal({ cfg, onClose }: Props) {
+export function LeadModal({ cfg, equipmentList, onClose }: Props) {
   const [form, setForm] = useState<FormData>({ name: '', email: '', phone: '', address: '' });
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const set = (k: keyof FormData, v: string) => setForm(p => ({ ...p, [k]: v }));
@@ -42,6 +43,7 @@ export function LeadModal({ cfg, onClose }: Props) {
           systemConfig: cfg,
           estimateLow: pricing?.low ?? 0,
           estimateHigh: pricing?.high ?? 0,
+          equipmentList,
         }),
       });
 

@@ -22,7 +22,7 @@ const CAMERA_SCOPE_LABELS: Record<string, string> = {
 
 interface Props {
   cfg: SystemConfig;
-  onRequestQuote: () => void;
+  onRequestQuote: (equipmentList: string) => void;
 }
 
 export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
@@ -50,6 +50,15 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
 
   function setQty(i: number, val: number) {
     setQtys(p => ({ ...p, [i]: Math.max(0, val) }));
+  }
+
+  function buildEquipmentListText() {
+    const selectedItems = equipment
+      .map((item, i) => ({ name: item.name, qty: qtys[i] ?? item.baseQty }))
+      .filter(item => item.qty > 0)
+      .map(item => `${item.name} x${item.qty}`);
+
+    return selectedItems.length > 0 ? selectedItems.join(', ') : 'None selected';
   }
 
   return (
@@ -133,7 +142,7 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
           <div className="cta-note">
             Ready for exact numbers? Our team will visit your property, walk every entry point, and provide a formal written quote.
           </div>
-          <button className="btn-cta" onClick={onRequestQuote}>
+          <button className="btn-cta" onClick={() => onRequestQuote(buildEquipmentListText())}>
             Request Formal Quote →
           </button>
         </div>
