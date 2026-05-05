@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import type { SystemConfig } from '@/types';
 import { Step1PropertyProfile } from './Step1PropertyProfile';
 import { Step2SurveillanceScope } from './Step2SurveillanceScope';
@@ -85,14 +84,6 @@ export function Wizard() {
 
   return (
     <>
-      <header className="wiz-nav">
-        <Image src="/assets/logo-securacore-horizontal.png" alt="SecuraCore" width={180} height={48} style={{ height: 48, width: 'auto' }} priority />
-        <div className="wiz-nav-right">
-          <span>Questions?</span>
-          <a href="tel:5412418114">(541) 241-8114</a>
-        </div>
-      </header>
-
       <main className="wiz-page">
         {/* Progress bar */}
         <div className="wiz-progress-wrap">
