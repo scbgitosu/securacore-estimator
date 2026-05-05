@@ -902,8 +902,13 @@ html, body {
   .step-title    { font-size: 22px; }
   .step-subtitle { margin-bottom: 24px; }
 
-  /* Option grids: 2-col stays 2-col, 3-col goes single column */
+  /* All multi-column grids collapse to single column */
+  .option-grid.cols-2,
   .option-grid.cols-3 { grid-template-columns: 1fr; }
+
+  /* Tighter card padding so stacked cards don't feel too tall */
+  .option-card    { padding: 16px 14px; }
+  .coverage-card  { padding: 20px 16px; }
 
   /* Inputs */
   .input-row  { grid-template-columns: 1fr; }
