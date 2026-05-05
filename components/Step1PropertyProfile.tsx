@@ -88,7 +88,7 @@ export function Step1PropertyProfile({ cfg, setCfg }: Props) {
           </div>
         </div>
         <div className="input-group">
-          <label>Home Size</label>
+          <label>Property Size</label>
           <select
             className="input-select"
             value={cfg.homeSize ?? ''}
