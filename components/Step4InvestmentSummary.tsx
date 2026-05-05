@@ -183,7 +183,7 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
             Ready for exact numbers? Our team will visit your property, walk every entry point, and provide a formal written quote.
           </div>
           <button className="btn-cta" onClick={() => onRequestQuote(buildEquipmentListText())}>
-            Request Formal Quote →
+            Request Quote
           </button>
         </div>
       </div>

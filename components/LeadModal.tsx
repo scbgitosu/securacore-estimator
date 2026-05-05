@@ -74,7 +74,7 @@ export function LeadModal({ cfg, equipmentList, onClose }: Props) {
           <>
             <div className="modal-head">
               <p className="step-eyebrow">No-Cost Quote Request</p>
-              <h2>Request Formal Quote</h2>
+              <h2>Request Quote</h2>
               <button className="btn-modal-close" onClick={onClose} aria-label="Close">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M1 1l12 12M13 1L1 13"/>
