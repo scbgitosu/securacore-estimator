@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { SystemConfig } from '@/types';
 import { Step1PropertyProfile } from './Step1PropertyProfile';
 import { Step2SurveillanceScope } from './Step2SurveillanceScope';
@@ -59,6 +59,19 @@ export function Wizard() {
   const [cfg, setCfg] = useState<SystemConfig>(DEFAULT_CONFIG);
   const [showModal, setShowModal] = useState(false);
   const [animKey, setAnimKey] = useState(0);
+
+  useEffect(() => {
+    const sendHeight = () => {
+      window.parent.postMessage(
+        { type: 'setHeight', height: document.documentElement.scrollHeight },
+        '*'
+      );
+    };
+    const observer = new ResizeObserver(sendHeight);
+    observer.observe(document.documentElement);
+    sendHeight();
+    return () => observer.disconnect();
+  }, [step, showModal]);
 
   function goNext() {
     if (step < 3 && canAdvance(step, cfg)) {

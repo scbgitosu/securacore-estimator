@@ -96,7 +96,7 @@ html, body {
   font-family: var(--font-body);
   background: var(--sc-grey-100);
   color: var(--sc-ink);
-  min-height: 100vh;
+  overscroll-behavior: none;
 }
 
 /* ── Top nav ────────────────────────────────────────────────────────────────── */
@@ -127,7 +127,6 @@ html, body {
 /* ── Page layout ────────────────────────────────────────────────────────────── */
 
 .wiz-page {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
