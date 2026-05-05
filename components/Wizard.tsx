@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { SystemConfig } from '@/types';
 import { Step1PropertyProfile } from './Step1PropertyProfile';
 import { Step2SecurityTier } from './Step2SecurityTier';
@@ -60,6 +60,7 @@ export function Wizard() {
   const [showModal, setShowModal] = useState(false);
   const [equipmentList, setEquipmentList] = useState('');
   const [animKey, setAnimKey] = useState(0);
+  const maxHeightRef = useRef(0);
 
   // Mount-only: the ResizeObserver and listeners we install here observe
   // document/body, so they keep firing across step/modal transitions without
@@ -92,10 +93,12 @@ export function Wizard() {
     };
 
     const sendHeight = () => {
-      window.parent.postMessage(
-        { type: 'setHeight', height: getDocumentHeight() },
-        '*'
-      );
+      const h = getDocumentHeight();
+      // Only grow the iframe container — never shrink it. This keeps the Wix
+      // footer at a stable position as the user navigates through steps.
+      if (h <= maxHeightRef.current) return;
+      maxHeightRef.current = h;
+      window.parent.postMessage({ type: 'setHeight', height: h }, '*');
     };
 
     const scheduleHeight = () => {
@@ -104,6 +107,15 @@ export function Wizard() {
         frameId = null;
         sendHeight();
       });
+    };
+
+    // Forward wheel events to the parent page so Chrome doesn't swallow them
+    // when the cursor is over the iframe.
+    const handleWheel = (e: WheelEvent) => {
+      window.parent.postMessage(
+        { type: 'wheel', deltaY: e.deltaY, deltaX: e.deltaX },
+        '*'
+      );
     };
 
     const observer = new ResizeObserver(scheduleHeight);
@@ -115,6 +127,7 @@ export function Wizard() {
     window.addEventListener('wizard:layout-change', scheduleHeight);
     viewport?.addEventListener('resize', scheduleHeight);
     viewport?.addEventListener('scroll', scheduleHeight);
+    document.addEventListener('wheel', handleWheel, { passive: true });
 
     scheduleHeight();
 
@@ -127,6 +140,7 @@ export function Wizard() {
       window.removeEventListener('wizard:layout-change', scheduleHeight);
       viewport?.removeEventListener('resize', scheduleHeight);
       viewport?.removeEventListener('scroll', scheduleHeight);
+      document.removeEventListener('wheel', handleWheel);
       if (frameId !== null) window.cancelAnimationFrame(frameId);
       if (settleTimerId !== null) window.clearTimeout(settleTimerId);
     };
@@ -156,6 +170,7 @@ export function Wizard() {
   }
 
   function restart() {
+    maxHeightRef.current = 0;
     setCfg(DEFAULT_CONFIG);
     setStep(0);
     setAnimKey(k => k + 1);
