@@ -90,6 +90,7 @@
 /* ── Reset ──────────────────────────────────────────────────────────────────── */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 
 html, body {
   font-family: var(--font-body);
@@ -126,7 +127,7 @@ html, body {
 /* ── Page layout ────────────────────────────────────────────────────────────── */
 
 .wiz-page {
-  min-height: calc(100vh - 80px);
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -262,10 +263,12 @@ html, body {
   gap: 8px;
   position: relative;
 }
-.option-card:hover {
-  border-color: var(--sc-orange);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .option-card:hover {
+    border-color: var(--sc-orange);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
 }
 .option-card.selected {
   border-color: var(--sc-orange);
@@ -321,10 +324,12 @@ html, body {
   gap: 12px;
   position: relative;
 }
-.coverage-card:hover {
-  border-color: var(--sc-orange);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .coverage-card:hover {
+    border-color: var(--sc-orange);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
 }
 .coverage-card.selected {
   border-color: var(--sc-orange);
@@ -376,10 +381,12 @@ html, body {
   display: flex;
   flex-direction: column;
 }
-.tier-card:hover {
-  border-color: var(--sc-orange);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .tier-card:hover {
+    border-color: var(--sc-orange);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
 }
 .tier-card.selected {
   border-color: var(--sc-orange);
@@ -886,14 +893,47 @@ html, body {
 /* ── Responsive ─────────────────────────────────────────────────────────────── */
 
 @media (max-width: 600px) {
-  .wiz-nav { padding: 0 20px; }
-  .wiz-card { padding: 28px 20px; }
-  .option-grid.cols-2,
-  .option-grid.cols-3 { grid-template-columns: 1fr 1fr; }
-  .input-row { grid-template-columns: 1fr; }
-  .form-grid { grid-template-columns: 1fr; }
+  /* Page & card spacing */
+  .wiz-page         { padding: 20px 16px 48px; }
+  .wiz-progress-wrap { margin-bottom: 24px; }
+  .wiz-card         { padding: 24px 18px; }
+
+  /* Step typography */
+  .step-title    { font-size: 22px; }
+  .step-subtitle { margin-bottom: 24px; }
+
+  /* Option grids: 2-col stays 2-col, 3-col goes single column */
+  .option-grid.cols-3 { grid-template-columns: 1fr; }
+
+  /* Inputs */
+  .input-row  { grid-template-columns: 1fr; }
+  .form-grid  { grid-template-columns: 1fr; }
   .form-grid .full { grid-column: 1; }
-  .summary-header { padding: 24px; flex-direction: column; align-items: flex-start; }
-  .cta-block { flex-direction: column; align-items: stretch; }
-  .btn-cta { text-align: center; }
+
+  /* Summary */
+  .summary-header  { padding: 20px; flex-direction: column; align-items: flex-start; }
+  .summary-section { padding: 20px; }
+  .pricing-block   { padding: 20px; }
+  .pricing-range   { font-size: 32px; }
+  .cta-block       { padding: 20px; flex-direction: column; align-items: stretch; }
+  .btn-cta         { text-align: center; }
+
+  /* Nav buttons */
+  .wiz-nav-btns { margin-top: 28px; padding-top: 20px; }
+
+  /* Modal: slide up from bottom on mobile */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal-card {
+    max-width: 100%;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    max-height: 92vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal-body  { padding: 24px 20px; }
+  .modal-foot  { padding: 0 20px 32px; }
+  .modal-head  { padding: 24px 20px; }
 }
