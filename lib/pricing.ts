@@ -7,6 +7,16 @@ import {
 } from '@/pricing-config';
 import type { SystemConfig, EquipmentItem } from '@/types';
 
+// Round the displayed range so that it always brackets the underlying number:
+// floor the low bound to the nearest $100, ceil the high bound. This avoids
+// quoting a "starts at" price that is actually higher than the real low.
+function floorTo100(n: number): number {
+  return Math.floor(n / 100) * 100;
+}
+function ceilTo100(n: number): number {
+  return Math.ceil(n / 100) * 100;
+}
+
 export function computeBasePricing(cfg: SystemConfig): { low: number; high: number } | null {
   if (!cfg.tier || !cfg.cameraScope) return null;
 
@@ -25,8 +35,8 @@ export function computeBasePricing(cfg: SystemConfig): { low: number; high: numb
     extraDoors * ENTRY_POINT_ADDERS.door.high;
 
   return {
-    low: Math.round(low / 100) * 100,
-    high: Math.round(high / 100) * 100,
+    low: floorTo100(low),
+    high: ceilTo100(high),
   };
 }
 
@@ -51,8 +61,8 @@ export function computeAdjustedPricing(
     }
   });
 
-  return {
-    low: Math.max(0, Math.round((basePricing.low + extraLow) / 100) * 100),
-    high: Math.max(0, Math.round((basePricing.high + extraHigh) / 100) * 100),
-  };
+  const low = Math.max(0, floorTo100(basePricing.low + extraLow));
+  const highRaw = Math.max(0, ceilTo100(basePricing.high + extraHigh));
+  // Guarantee high >= low after rounding (e.g. when items are removed).
+  return { low, high: Math.max(low, highRaw) };
 }

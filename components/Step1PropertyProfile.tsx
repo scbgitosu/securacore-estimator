@@ -3,6 +3,8 @@
 import type { SystemConfig, HomeType, HomeSize } from '@/types';
 import { DOORS_BY_HOME_TYPE } from '@/pricing-config';
 
+const MAX_DOORS = 15;
+
 const HOME_TYPES: { id: HomeType; label: string; desc: string }[] = [
   { id: 'single-family', label: 'Single Family', desc: 'Detached house with yard' },
   { id: 'condo',         label: 'Condo',         desc: 'Shared-building unit' },
@@ -68,9 +70,21 @@ export function Step1PropertyProfile({ cfg, setCfg }: Props) {
         <div className="input-group">
           <label>Exterior Doors</label>
           <div className="input-stepper">
-            <button className="stepper-btn" disabled={cfg.doors <= 1} onClick={() => set('doors', cfg.doors - 1)}>−</button>
+            <button
+              className="stepper-btn"
+              disabled={cfg.doors <= 1}
+              onClick={() => set('doors', Math.max(1, cfg.doors - 1))}
+            >
+              −
+            </button>
             <span className="stepper-val">{cfg.doors}</span>
-            <button className="stepper-btn" onClick={() => set('doors', cfg.doors + 1)}>+</button>
+            <button
+              className="stepper-btn"
+              disabled={cfg.doors >= MAX_DOORS}
+              onClick={() => set('doors', Math.min(MAX_DOORS, cfg.doors + 1))}
+            >
+              +
+            </button>
           </div>
         </div>
         <div className="input-group">

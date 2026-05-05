@@ -8,7 +8,7 @@ const CAMERA_OPTIONS: { id: CameraScope; label: string; cameras: string; desc: s
     id: 'front-only',
     label: 'Front / Entrance',
     cameras: '1 Camera + 1 Doorbell',
-    desc: 'Outdoor surveillance camera\nCovering your driveway\nVideo doorbell',
+    desc: 'Single camera covering the driveway\nplus a doorbell covering the main entrance',
   },
   {
     id: 'perimeter',
@@ -43,7 +43,7 @@ interface Props {
   setCfg: React.Dispatch<React.SetStateAction<SystemConfig>>;
 }
 
-export function Step2SurveillanceScope({ cfg, setCfg }: Props) {
+export function Step3SurveillanceScope({ cfg, setCfg }: Props) {
   const set = <K extends keyof SystemConfig>(k: K, v: SystemConfig[K]) =>
     setCfg(p => ({ ...p, [k]: v }));
 
@@ -52,7 +52,7 @@ export function Step2SurveillanceScope({ cfg, setCfg }: Props) {
       <p className="step-eyebrow">Step 3 of 4</p>
       <h2 className="step-title">Surveillance Scope</h2>
       <p className="step-subtitle">
-        Choose the camera coverage level that fits your property and peace of mind. Full Interior / Exterior is five cameras plus a video doorbell—four outdoor and one indoor.
+        Choose the camera coverage level that fits your property and peace of mind.
         <em className="step-subtitle-secondary">
           These selections are flexible, and you can adjust quantities at the end before finalizing.
         </em>

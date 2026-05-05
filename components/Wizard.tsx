@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import type { SystemConfig } from '@/types';
 import { Step1PropertyProfile } from './Step1PropertyProfile';
-import { Step2SurveillanceScope } from './Step2SurveillanceScope';
-import { Step3SecurityTier } from './Step3SecurityTier';
+import { Step2SecurityTier } from './Step2SecurityTier';
+import { Step3SurveillanceScope } from './Step3SurveillanceScope';
 import { Step4InvestmentSummary } from './Step4InvestmentSummary';
 import { LeadModal } from './LeadModal';
 
@@ -61,6 +61,10 @@ export function Wizard() {
   const [equipmentList, setEquipmentList] = useState('');
   const [animKey, setAnimKey] = useState(0);
 
+  // Mount-only: the ResizeObserver and listeners we install here observe
+  // document/body, so they keep firing across step/modal transitions without
+  // needing to be torn down and re-bound on each change. The
+  // `wizard:layout-change` event lets descendants explicitly trigger a recalc.
   useEffect(() => {
     let frameId: number | null = null;
     let settleTimerId: number | null = null;
@@ -126,6 +130,15 @@ export function Wizard() {
       if (frameId !== null) window.cancelAnimationFrame(frameId);
       if (settleTimerId !== null) window.clearTimeout(settleTimerId);
     };
+  }, []);
+
+  // After a step transition or modal toggle, give the layout a beat to settle
+  // and then recalc the iframe height.
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      window.dispatchEvent(new Event('wizard:layout-change'));
+    }, 50);
+    return () => window.clearTimeout(id);
   }, [step, showModal]);
 
   function goNext() {
@@ -176,8 +189,8 @@ export function Wizard() {
         {/* Step content */}
         <div className="wiz-card" key={animKey}>
           {step === 0 && <Step1PropertyProfile cfg={cfg} setCfg={setCfg} />}
-          {step === 1 && <Step3SecurityTier cfg={cfg} setCfg={setCfg} />}
-          {step === 2 && <Step2SurveillanceScope cfg={cfg} setCfg={setCfg} />}
+          {step === 1 && <Step2SecurityTier cfg={cfg} setCfg={setCfg} />}
+          {step === 2 && <Step3SurveillanceScope cfg={cfg} setCfg={setCfg} />}
           {step === 3 && (
             <Step4InvestmentSummary
               cfg={cfg}

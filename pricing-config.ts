@@ -16,10 +16,14 @@ export const DOORS_BY_HOME_TYPE: Record<HomeType, number> = {
 };
 
 // ── Base price ranges by security tier ────────────────────────────────────────
+// These ranges include all equipment that is bundled with a tier (control
+// panel, motion detectors, smoke/CO for Complete, smart lock/garage/water
+// for Ultimate, etc.) plus baseline labor. Per-door adders, camera coverage
+// adders, and live quantity edits in Step 4 are layered on top.
 export const BASE_PRICES = {
-  Essential: { low: 500,  high: 900 },
-  Complete:  { low: 600, high: 1000 },
-  Ultimate:  { low: 700, high: 1100 },
+  Essential: { low: 500,  high: 900  },
+  Complete:  { low: 900,  high: 1500 },
+  Ultimate:  { low: 1500, high: 2500 },
 } as const;
 
 // ── Camera coverage adders (added on top of base tier price) ──────────────────
@@ -44,14 +48,12 @@ export const MONITORING_RANGE = { low: 44.99, high: 79.99 } as const;
 // per-unit amounts. Items with low/high of 0 are included at no extra cost.
 export const UNIT_PRICES: Record<string, { low: number; high: number }> = {
   '7" Wall/Counter Security Control Panel': { low: 400, high: 800 },
-  'Door Sensor':                    { low: 99, high: 130 },
-  'Door Sensors':                   { low: 99, high: 130 },
-  'Outdoor Camera':                 { low: 300,  high: 450  },
-  'Indoor Camera':                  { low: 200,  high: 350  },
+  'Door Sensors':                   { low: 99,  high: 130 },
+  'Outdoor Camera':                 { low: 300, high: 450 },
+  'Indoor Camera':                  { low: 200, high: 350 },
   '24/7 Onboard Recording':         { low: 0,   high: 0   },
-  'Video Doorbell':                 { low: 300,  high: 450  },
-  'Motion Detector':                { low: 130,  high: 200  },
-  'Motion Detectors':               { low: 130,  high: 200  },
+  'Video Doorbell':                 { low: 300, high: 450 },
+  'Motion Detectors':               { low: 130, high: 200 },
   'Smoke Detectors':                { low: 120,  high: 175  },
   'Carbon Monoxide Detector':       { low: 120,  high: 175  },
   'Smart Lock - Keyless Entry':     { low: 280, high: 400 },

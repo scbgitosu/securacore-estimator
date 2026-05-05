@@ -930,12 +930,16 @@ html, body {
   .step-title    { font-size: 22px; }
   .step-subtitle { margin-bottom: 24px; }
 
-  /* All multi-column grids collapse to single column */
-  .option-grid.cols-2,
+  /* Keep 2-up grids 2-wide on mobile so 4-card grids (e.g. Home Type) stay
+     compact instead of stacking into a tall column. 3-up grids still collapse
+     to a single column because their cards carry more text. */
   .option-grid.cols-3 { grid-template-columns: 1fr; }
 
   /* Tighter card padding so stacked cards don't feel too tall */
-  .option-card    { padding: 16px 14px; }
+  .option-card    { padding: 14px 12px; gap: 4px; }
+  .option-card .check-ring { top: 10px; right: 10px; }
+  .option-label   { font-size: 12px; }
+  .option-desc    { font-size: 12px; line-height: 1.4; }
   .coverage-card  { padding: 20px 16px; }
 
   /* Inputs */
@@ -953,6 +957,13 @@ html, body {
 
   /* Nav buttons */
   .wiz-nav-btns { margin-top: 28px; padding-top: 20px; }
+
+  /* Tighten the Step 4 summary for thumb reach. */
+  .equipment-name        { font-size: 13px; }
+  .pricing-range-label   { font-size: 8px; }
+  .config-chip           { font-size: 11px; padding: 3px 10px; }
+  .summary-header        { gap: 12px; }
+  .summary-mark          { width: 36px; height: 36px; }
 
   /* Modal: slide up from bottom on mobile */
   .modal-overlay {
@@ -974,4 +985,9 @@ html, body {
   .modal-body  { padding: 24px 20px; }
   .modal-foot  { padding: 0 20px 32px; }
   .modal-head  { padding: 24px 20px; }
+}
+
+/* Extra-narrow phones — drop everything to 1 col so cards aren't squeezed. */
+@media (max-width: 360px) {
+  .option-grid.cols-2 { grid-template-columns: 1fr; }
 }

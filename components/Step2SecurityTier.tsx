@@ -51,7 +51,7 @@ interface Props {
   setCfg: React.Dispatch<React.SetStateAction<SystemConfig>>;
 }
 
-export function Step3SecurityTier({ cfg, setCfg }: Props) {
+export function Step2SecurityTier({ cfg, setCfg }: Props) {
   const set = <K extends keyof SystemConfig>(k: K, v: SystemConfig[K]) =>
     setCfg(p => ({ ...p, [k]: v }));
 

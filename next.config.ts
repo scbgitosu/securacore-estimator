@@ -6,9 +6,10 @@ const nextConfig: NextConfig = {
       {
         source: '/(.*)',
         headers: [
-          // Allow embedding in Wix iframes
-          { key: 'X-Frame-Options', value: 'ALLOWALL' },
-          { key: 'Content-Security-Policy', value: "frame-ancestors *" },
+          // Allow embedding in Wix iframes. (X-Frame-Options has no
+          // wildcard/ALLOWALL value in the spec — modern browsers ignore
+          // such headers — so we rely on CSP frame-ancestors.)
+          { key: 'Content-Security-Policy', value: 'frame-ancestors *' },
         ],
       },
     ];

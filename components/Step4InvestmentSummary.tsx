@@ -27,6 +27,10 @@ const HOME_SIZE_LABELS: Record<string, string> = {
   large:  'Large (exceeds 3500 sq ft)',
 };
 
+// Sanity ceiling on per-item quantity — prevents accidental ballooning of the
+// estimate (e.g. user holding the "+" button) and silly screenshots.
+const MAX_ITEM_QTY = 25;
+
 interface Props {
   cfg: SystemConfig;
   onRequestQuote: (equipmentList: string) => void;
@@ -37,7 +41,14 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
     () => buildFullEquipmentCatalog(cfg),
     [cfg.tier, cfg.cameraScope, cfg.doors]
   );
-  const basePricing = computeBasePricing(cfg)!;
+
+  // Defensive fallback: the wizard guards us from getting here without tier
+  // and cameraScope set, but a deep link or future routing change could land
+  // a user here directly. Render a zeroed estimate instead of crashing.
+  const basePricing = useMemo(
+    () => computeBasePricing(cfg) ?? { low: 0, high: 0 },
+    [cfg.tier, cfg.cameraScope, cfg.doors]
+  );
 
   const equipKey = equipment.map(e => `${e.name}:${e.baseQty}`).join('|');
 
@@ -50,9 +61,13 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [equipKey]);
 
+  // Depend on the primitive bounds rather than the basePricing object —
+  // computeBasePricing returns a fresh reference on every call, which would
+  // otherwise bust this memo on every render.
   const adjustedPricing = useMemo(
     () => computeAdjustedPricing(basePricing, equipment, qtys),
-    [qtys, equipment, basePricing]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [qtys, equipment, basePricing.low, basePricing.high]
   );
 
   const sortedEquipment = useMemo(() => {
@@ -71,7 +86,7 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
     adjustedPricing.low !== basePricing.low || adjustedPricing.high !== basePricing.high;
 
   function setQty(name: string, val: number) {
-    setQtys(p => ({ ...p, [name]: Math.max(0, val) }));
+    setQtys(p => ({ ...p, [name]: Math.max(0, Math.min(MAX_ITEM_QTY, val)) }));
   }
 
   function buildEquipmentListText() {
@@ -128,11 +143,11 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', overflow: 'hidden', flexShrink: 0 }}>
-                    <QtyBtn onClick={() => setQty(item.name, qty - 1)} label="−" />
+                    <QtyBtn onClick={() => setQty(item.name, qty - 1)} label="−" disabled={qty <= 0} />
                     <span style={{ minWidth: 28, textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: removed ? 'var(--sc-grey-400)' : 'var(--sc-ink)', padding: '0 4px' }}>
                       {qty}
                     </span>
-                    <QtyBtn onClick={() => setQty(item.name, qty + 1)} label="+" />
+                    <QtyBtn onClick={() => setQty(item.name, qty + 1)} label="+" disabled={qty >= MAX_ITEM_QTY} />
                   </div>
                 </div>
               );
@@ -176,20 +191,23 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
   );
 }
 
-function QtyBtn({ onClick, label }: { onClick: () => void; label: string }) {
+function QtyBtn({ onClick, label, disabled }: { onClick: () => void; label: string; disabled?: boolean }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       style={{
         width: 30, height: 30,
         background: 'var(--sc-grey-100)',
-        border: 'none', cursor: 'pointer',
+        border: 'none',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.4 : 1,
         fontSize: 16, color: 'var(--sc-ink)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        transition: 'background .15s',
+        transition: 'background .15s, opacity .15s',
       }}
-      onMouseEnter={e => (e.currentTarget.style.background = 'var(--sc-grey-200)')}
-      onMouseLeave={e => (e.currentTarget.style.background = 'var(--sc-grey-100)')}
+      onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = 'var(--sc-grey-200)'; }}
+      onMouseLeave={e => { if (!disabled) e.currentTarget.style.background = 'var(--sc-grey-100)'; }}
       aria-label={label === '−' ? 'Decrease' : 'Increase'}
     >
       {label}

@@ -17,11 +17,6 @@ const EQUIPMENT_CATALOG_ORDER = [
   'Water Leak Sensor',
 ] as const;
 
-function normalizeEquipmentName(name: string): string {
-  if (name === 'Door Sensor') return 'Door Sensors';
-  return name;
-}
-
 export function buildEquipment(cfg: SystemConfig): EquipmentItem[] {
   if (!cfg.tier) return [];
 
@@ -29,7 +24,7 @@ export function buildEquipment(cfg: SystemConfig): EquipmentItem[] {
   const doors = cfg.doors || 1;
 
   items.push({ name: '7" Wall/Counter Security Control Panel', baseQty: 1 });
-  items.push({ name: doors > 1 ? 'Door Sensors' : 'Door Sensor', baseQty: doors });
+  items.push({ name: 'Door Sensors', baseQty: doors });
 
   if (cfg.cameraScope === 'front-only') {
     items.push({ name: 'Outdoor Camera', baseQty: 1 });
@@ -77,8 +72,7 @@ export function buildFullEquipmentCatalog(cfg: SystemConfig): EquipmentItem[] {
   const suggestedQtyByName = new Map<string, number>();
 
   suggestedItems.forEach(item => {
-    const key = normalizeEquipmentName(item.name);
-    suggestedQtyByName.set(key, (suggestedQtyByName.get(key) ?? 0) + item.baseQty);
+    suggestedQtyByName.set(item.name, (suggestedQtyByName.get(item.name) ?? 0) + item.baseQty);
   });
 
   return EQUIPMENT_CATALOG_ORDER.map(name => ({
