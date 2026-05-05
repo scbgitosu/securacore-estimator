@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { SystemConfig } from '@/types';
 import { computeBasePricing } from '@/lib/pricing';
 
@@ -21,6 +21,10 @@ export function LeadModal({ cfg, onClose }: Props) {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const set = (k: keyof FormData, v: string) => setForm(p => ({ ...p, [k]: v }));
   const valid = form.name.trim() && form.email.trim() && form.phone.trim();
+
+  useEffect(() => {
+    window.dispatchEvent(new Event('wizard:layout-change'));
+  }, [status]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

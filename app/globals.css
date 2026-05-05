@@ -933,9 +933,14 @@ html, body {
   .modal-card {
     max-width: 100%;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-    max-height: 92vh;
+    max-height: 92dvh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+  }
+  @supports not (height: 100dvh) {
+    .modal-card {
+      max-height: 92vh;
+    }
   }
   .modal-body  { padding: 24px 20px; }
   .modal-foot  { padding: 0 20px 32px; }

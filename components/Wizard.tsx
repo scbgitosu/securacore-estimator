@@ -61,16 +61,70 @@ export function Wizard() {
   const [animKey, setAnimKey] = useState(0);
 
   useEffect(() => {
+    let frameId: number | null = null;
+    let settleTimerId: number | null = null;
+
+    const getDocumentHeight = () => {
+      const body = document.body;
+      const html = document.documentElement;
+
+      const documentHeight = Math.max(
+        body?.scrollHeight ?? 0,
+        body?.offsetHeight ?? 0,
+        html.scrollHeight,
+        html.offsetHeight
+      );
+
+      const viewportHeight = Math.ceil(
+        Math.max(
+          window.innerHeight || 0,
+          window.visualViewport?.height || 0
+        )
+      );
+
+      // Fixed-position layers (like the lead modal) may not affect scrollHeight.
+      return Math.max(documentHeight, viewportHeight);
+    };
+
     const sendHeight = () => {
       window.parent.postMessage(
-        { type: 'setHeight', height: document.documentElement.scrollHeight },
+        { type: 'setHeight', height: getDocumentHeight() },
         '*'
       );
     };
-    const observer = new ResizeObserver(sendHeight);
+
+    const scheduleHeight = () => {
+      if (frameId !== null) return;
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+        sendHeight();
+      });
+    };
+
+    const observer = new ResizeObserver(scheduleHeight);
     observer.observe(document.documentElement);
-    sendHeight();
-    return () => observer.disconnect();
+    if (document.body) observer.observe(document.body);
+
+    const viewport = window.visualViewport;
+    window.addEventListener('resize', scheduleHeight);
+    window.addEventListener('wizard:layout-change', scheduleHeight);
+    viewport?.addEventListener('resize', scheduleHeight);
+    viewport?.addEventListener('scroll', scheduleHeight);
+
+    scheduleHeight();
+
+    // Step transitions and modal open/close can finish after first paint.
+    settleTimerId = window.setTimeout(scheduleHeight, 250);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', scheduleHeight);
+      window.removeEventListener('wizard:layout-change', scheduleHeight);
+      viewport?.removeEventListener('resize', scheduleHeight);
+      viewport?.removeEventListener('scroll', scheduleHeight);
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
+      if (settleTimerId !== null) window.clearTimeout(settleTimerId);
+    };
   }, [step, showModal]);
 
   function goNext() {
