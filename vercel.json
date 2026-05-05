@@ -1,9 +1,5 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "env": {
-    "WIX_API_KEY": "@wix_api_key",
-    "WIX_SITE_ID": "@wix_site_id"
-  }
+  "outputDirectory": ".next"
 }
