@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 
   // ── 2. Save to EstimatorLeads Data Collection ─────────────────────────────
   const dataPayload = {
-    dataCollectionId: 'EstimatorLeads',
+    dataCollectionId: 'SecurityEstimatorLeads',
     dataItem: {
       data: {
         name,
