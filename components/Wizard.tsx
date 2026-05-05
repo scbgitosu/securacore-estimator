@@ -59,6 +59,10 @@ export function Wizard() {
   const [cfg, setCfg] = useState<SystemConfig>(DEFAULT_CONFIG);
   const [showModal, setShowModal] = useState(false);
   const [equipmentList, setEquipmentList] = useState('');
+  const [quoteEstimate, setQuoteEstimate] = useState<{ low: number; high: number }>({
+    low: 0,
+    high: 0,
+  });
   const [animKey, setAnimKey] = useState(0);
   const maxHeightRef = useRef(0);
 
@@ -209,8 +213,9 @@ export function Wizard() {
           {step === 3 && (
             <Step4InvestmentSummary
               cfg={cfg}
-              onRequestQuote={(list) => {
+              onRequestQuote={(list, estimate) => {
                 setEquipmentList(list);
+                setQuoteEstimate(estimate);
                 setShowModal(true);
               }}
             />
@@ -242,7 +247,15 @@ export function Wizard() {
         </div>
       </main>
 
-      {showModal && <LeadModal cfg={cfg} equipmentList={equipmentList} onClose={() => setShowModal(false)} />}
+      {showModal && (
+        <LeadModal
+          cfg={cfg}
+          equipmentList={equipmentList}
+          estimateLow={quoteEstimate.low}
+          estimateHigh={quoteEstimate.high}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </>
   );
 }

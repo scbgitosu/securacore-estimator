@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import type { SystemConfig } from '@/types';
-import { computeBasePricing } from '@/lib/pricing';
-
 interface FormData {
   name: string;
   email: string;
@@ -14,10 +12,12 @@ interface FormData {
 interface Props {
   cfg: SystemConfig;
   equipmentList: string;
+  estimateLow: number;
+  estimateHigh: number;
   onClose: () => void;
 }
 
-export function LeadModal({ cfg, equipmentList, onClose }: Props) {
+export function LeadModal({ cfg, equipmentList, estimateLow, estimateHigh, onClose }: Props) {
   const [form, setForm] = useState<FormData>({ name: '', email: '', phone: '', address: '' });
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const set = (k: keyof FormData, v: string) => setForm(p => ({ ...p, [k]: v }));
@@ -32,7 +32,6 @@ export function LeadModal({ cfg, equipmentList, onClose }: Props) {
     if (!valid || status === 'submitting') return;
 
     setStatus('submitting');
-    const pricing = computeBasePricing(cfg);
 
     try {
       const res = await fetch('/api/leads', {
@@ -41,8 +40,8 @@ export function LeadModal({ cfg, equipmentList, onClose }: Props) {
         body: JSON.stringify({
           ...form,
           systemConfig: cfg,
-          estimateLow: pricing?.low ?? 0,
-          estimateHigh: pricing?.high ?? 0,
+          estimateLow,
+          estimateHigh,
           equipmentList,
         }),
       });

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import type { SystemConfig } from '@/types';
 import { buildFullEquipmentCatalog } from '@/lib/equipment';
-import { computeBasePricing, computeAdjustedPricing } from '@/lib/pricing';
+import { computeLaborPricing, computeTotalEstimate } from '@/lib/pricing';
 import { MONITORING_RANGE } from '@/pricing-config';
 
 const HOME_TYPE_LABELS: Record<string, string> = {
@@ -33,7 +33,7 @@ const MAX_ITEM_QTY = 25;
 
 interface Props {
   cfg: SystemConfig;
-  onRequestQuote: (equipmentList: string) => void;
+  onRequestQuote: (equipmentList: string, estimate: { low: number; high: number }) => void;
 }
 
 export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
@@ -45,8 +45,8 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
   // Defensive fallback: the wizard guards us from getting here without tier
   // and cameraScope set, but a deep link or future routing change could land
   // a user here directly. Render a zeroed estimate instead of crashing.
-  const basePricing = useMemo(
-    () => computeBasePricing(cfg) ?? { low: 0, high: 0 },
+  const laborPricing = useMemo(
+    () => computeLaborPricing(cfg) ?? { low: 0, high: 0 },
     [cfg.tier, cfg.cameraScope, cfg.doors]
   );
 
@@ -61,14 +61,18 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [equipKey]);
 
-  // Depend on the primitive bounds rather than the basePricing object —
-  // computeBasePricing returns a fresh reference on every call, which would
-  // otherwise bust this memo on every render.
-  const adjustedPricing = useMemo(
-    () => computeAdjustedPricing(basePricing, equipment, qtys),
+  // Depend on primitive bounds — memo deps stay stable across renders.
+  const totalEstimate = useMemo(
+    () => computeTotalEstimate(laborPricing, equipment, qtys),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [qtys, equipment, basePricing.low, basePricing.high]
+    [qtys, equipment, laborPricing.low, laborPricing.high]
   );
+
+  const catalogDefaultTotal = useMemo(() => {
+    const defaults = Object.fromEntries(equipment.map(item => [item.name, item.baseQty]));
+    return computeTotalEstimate(laborPricing, equipment, defaults);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [equipment, laborPricing.low, laborPricing.high]);
 
   const sortedEquipment = useMemo(() => {
     const catalogOrder = new Map(equipment.map((item, i) => [item.name, i]));
@@ -83,7 +87,8 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
   }, [equipment, qtys]);
 
   const priceChanged =
-    adjustedPricing.low !== basePricing.low || adjustedPricing.high !== basePricing.high;
+    totalEstimate.low !== catalogDefaultTotal.low ||
+    totalEstimate.high !== catalogDefaultTotal.high;
 
   function setQty(name: string, val: number) {
     setQtys(p => ({ ...p, [name]: Math.max(0, Math.min(MAX_ITEM_QTY, val)) }));
@@ -165,7 +170,7 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
             )}
           </div>
           <div className="pricing-range">
-            ${adjustedPricing.low.toLocaleString()} – ${adjustedPricing.high.toLocaleString()}
+            ${totalEstimate.low.toLocaleString()} – ${totalEstimate.high.toLocaleString()}
           </div>
           <div className="pricing-note">
             Equipment + labor. Final investment determined at your on-site assessment.
@@ -182,7 +187,10 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
           <div className="cta-note">
             Ready for exact numbers? Our team will visit your property, walk every entry point, and provide a formal written quote.
           </div>
-          <button className="btn-cta" onClick={() => onRequestQuote(buildEquipmentListText())}>
+          <button
+            className="btn-cta"
+            onClick={() => onRequestQuote(buildEquipmentListText(), totalEstimate)}
+          >
             Request Quote
           </button>
         </div>

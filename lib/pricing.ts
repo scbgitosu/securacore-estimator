@@ -1,7 +1,7 @@
 import {
-  BASE_PRICES,
-  CAMERA_ADDERS,
-  ENTRY_POINT_ADDERS,
+  TIER_LABOR,
+  CAMERA_SCOPE_LABOR,
+  EXTRA_DOOR_LABOR,
   UNIT_PRICES,
   DEFAULT_UNIT_PRICE,
 } from '@/pricing-config';
@@ -17,22 +17,16 @@ function ceilTo100(n: number): number {
   return Math.ceil(n / 100) * 100;
 }
 
-export function computeBasePricing(cfg: SystemConfig): { low: number; high: number } | null {
+/** Labor only: tier baseline + surveillance-scope labor + extra-door labor. */
+export function computeLaborPricing(cfg: SystemConfig): { low: number; high: number } | null {
   if (!cfg.tier || !cfg.cameraScope) return null;
 
-  const base = BASE_PRICES[cfg.tier];
-  const cam = CAMERA_ADDERS[cfg.cameraScope];
+  const tier = TIER_LABOR[cfg.tier];
+  const scope = CAMERA_SCOPE_LABOR[cfg.cameraScope];
   const extraDoors = Math.max(0, (cfg.doors || 1) - 1);
 
-  const low =
-    base.low +
-    cam.low +
-    extraDoors * ENTRY_POINT_ADDERS.door.low;
-
-  const high =
-    base.high +
-    cam.high +
-    extraDoors * ENTRY_POINT_ADDERS.door.high;
+  const low = tier.low + scope.low + extraDoors * EXTRA_DOOR_LABOR.door.low;
+  const high = tier.high + scope.high + extraDoors * EXTRA_DOOR_LABOR.door.high;
 
   return {
     low: floorTo100(low),
@@ -44,25 +38,33 @@ export function getUnitPrice(name: string): { low: number; high: number } {
   return UNIT_PRICES[name] ?? DEFAULT_UNIT_PRICE;
 }
 
-export function computeAdjustedPricing(
-  basePricing: { low: number; high: number },
+/** Sum of (quantity × unit price) for every catalog line with quantity > 0. */
+export function computeMaterialsCost(
   equipment: EquipmentItem[],
   qtys: Record<string, number>
 ): { low: number; high: number } {
-  let extraLow = 0;
-  let extraHigh = 0;
+  let low = 0;
+  let high = 0;
 
-  equipment.forEach(item => {
-    const diff = (qtys[item.name] ?? item.baseQty) - item.baseQty;
-    if (diff !== 0) {
-      const up = getUnitPrice(item.name);
-      extraLow += diff * up.low;
-      extraHigh += diff * up.high;
-    }
-  });
+  for (const item of equipment) {
+    const q = qtys[item.name] ?? item.baseQty;
+    if (q <= 0) continue;
+    const up = getUnitPrice(item.name);
+    low += q * up.low;
+    high += q * up.high;
+  }
 
-  const low = Math.max(0, floorTo100(basePricing.low + extraLow));
-  const highRaw = Math.max(0, ceilTo100(basePricing.high + extraHigh));
-  // Guarantee high >= low after rounding (e.g. when items are removed).
+  return { low, high };
+}
+
+/** Labor (rounded band) + materials; final range bracketed to $100. */
+export function computeTotalEstimate(
+  labor: { low: number; high: number },
+  equipment: EquipmentItem[],
+  qtys: Record<string, number>
+): { low: number; high: number } {
+  const mat = computeMaterialsCost(equipment, qtys);
+  const low = Math.max(0, floorTo100(labor.low + mat.low));
+  const highRaw = Math.max(0, ceilTo100(labor.high + mat.high));
   return { low, high: Math.max(low, highRaw) };
 }
