@@ -1,7 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { SystemConfig } from '@/types';
+import {
+  configUnlockKey,
+  clearUnlockKey,
+  isConfigUnlocked,
+  writeUnlockKey,
+} from '@/lib/estimate-unlock';
 import { Step1PropertyProfile } from './Step1PropertyProfile';
 import { Step2SecurityTier } from './Step2SecurityTier';
 import { Step3SurveillanceScope } from './Step3SurveillanceScope';
@@ -57,7 +63,9 @@ function CheckDone() {
 export function Wizard() {
   const [step, setStep] = useState(0);
   const [cfg, setCfg] = useState<SystemConfig>(DEFAULT_CONFIG);
+  const [estimateUnlocked, setEstimateUnlocked] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [modalAnchor, setModalAnchor] = useState<HTMLElement | null>(null);
   const [equipmentList, setEquipmentList] = useState('');
   const [quoteEstimate, setQuoteEstimate] = useState<{ low: number; high: number }>({
     low: 0,
@@ -65,6 +73,17 @@ export function Wizard() {
   });
   const [animKey, setAnimKey] = useState(0);
   const maxHeightRef = useRef(0);
+
+  const unlockKey = configUnlockKey(cfg);
+
+  useEffect(() => {
+    setEstimateUnlocked(isConfigUnlocked(cfg));
+  }, [unlockKey]);
+
+  const handleUnlockEstimate = useCallback(() => {
+    writeUnlockKey(unlockKey);
+    setEstimateUnlocked(true);
+  }, [unlockKey]);
 
   // Mount-only: the ResizeObserver and listeners we install here observe
   // document/body, so they keep firing across step/modal transitions without
@@ -157,7 +176,7 @@ export function Wizard() {
       window.dispatchEvent(new Event('wizard:layout-change'));
     }, 50);
     return () => window.clearTimeout(id);
-  }, [step, showModal]);
+  }, [step, showModal, estimateUnlocked]);
 
   function goNext() {
     if (step < 3 && canAdvance(step, cfg)) {
@@ -175,9 +194,29 @@ export function Wizard() {
 
   function restart() {
     maxHeightRef.current = 0;
+    clearUnlockKey();
+    setEstimateUnlocked(false);
     setCfg(DEFAULT_CONFIG);
     setStep(0);
     setAnimKey(k => k + 1);
+    setShowModal(false);
+    setModalAnchor(null);
+  }
+
+  function handleSeeEstimate(
+    list: string,
+    estimate: { low: number; high: number },
+    anchorEl: HTMLElement
+  ) {
+    setEquipmentList(list);
+    setQuoteEstimate(estimate);
+    setModalAnchor(anchorEl);
+    setShowModal(true);
+  }
+
+  function handleCloseModal() {
+    setShowModal(false);
+    setModalAnchor(null);
   }
 
   const fillPct = (step / (STEPS.length - 1)) * 100;
@@ -213,11 +252,8 @@ export function Wizard() {
           {step === 3 && (
             <Step4InvestmentSummary
               cfg={cfg}
-              onRequestQuote={(list, estimate) => {
-                setEquipmentList(list);
-                setQuoteEstimate(estimate);
-                setShowModal(true);
-              }}
+              estimateUnlocked={estimateUnlocked}
+              onSeeEstimate={handleSeeEstimate}
             />
           )}
 
@@ -253,7 +289,9 @@ export function Wizard() {
           equipmentList={equipmentList}
           estimateLow={quoteEstimate.low}
           estimateHigh={quoteEstimate.high}
-          onClose={() => setShowModal(false)}
+          anchorEl={modalAnchor}
+          onUnlockEstimate={handleUnlockEstimate}
+          onClose={handleCloseModal}
         />
       )}
     </>

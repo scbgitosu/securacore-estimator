@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import type { SystemConfig } from '@/types';
 import { buildFullEquipmentCatalog } from '@/lib/equipment';
@@ -27,16 +27,31 @@ const HOME_SIZE_LABELS: Record<string, string> = {
   large:  'Large (exceeds 3500 sq ft)',
 };
 
+/** Fake ranges for gated teaser — not derived from real pricing. */
+const PLACEHOLDER_BY_TIER: Record<string, { low: string; high: string }> = {
+  Essential: { low: '3,500', high: '7,500' },
+  Complete:  { low: '5,000', high: '10,500' },
+  Ultimate:  { low: '7,500', high: '14,000' },
+};
+const DEFAULT_PLACEHOLDER = { low: '4,500', high: '9,200' };
+
 // Sanity ceiling on per-item quantity — prevents accidental ballooning of the
 // estimate (e.g. user holding the "+" button) and silly screenshots.
 const MAX_ITEM_QTY = 25;
 
 interface Props {
   cfg: SystemConfig;
-  onRequestQuote: (equipmentList: string, estimate: { low: number; high: number }) => void;
+  estimateUnlocked: boolean;
+  onSeeEstimate: (
+    equipmentList: string,
+    estimate: { low: number; high: number },
+    anchorEl: HTMLElement
+  ) => void;
 }
 
-export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
+export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }: Props) {
+  const ctaRef = useRef<HTMLButtonElement>(null);
+
   const equipment = useMemo(
     () => buildFullEquipmentCatalog(cfg),
     [cfg.tier, cfg.cameraScope, cfg.doors]
@@ -90,6 +105,9 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
     totalEstimate.low !== catalogDefaultTotal.low ||
     totalEstimate.high !== catalogDefaultTotal.high;
 
+  const placeholder =
+    (cfg.tier && PLACEHOLDER_BY_TIER[cfg.tier]) || DEFAULT_PLACEHOLDER;
+
   function setQty(name: string, val: number) {
     setQtys(p => ({ ...p, [name]: Math.max(0, Math.min(MAX_ITEM_QTY, val)) }));
   }
@@ -101,6 +119,12 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
       .map(item => `${item.name} x${item.qty}`);
 
     return selectedItems.length > 0 ? selectedItems.join(', ') : 'None selected';
+  }
+
+  function handleRevealClick() {
+    const el = ctaRef.current;
+    if (!el) return;
+    onSeeEstimate(buildEquipmentListText(), totalEstimate, el);
   }
 
   return (
@@ -160,39 +184,63 @@ export function Step4InvestmentSummary({ cfg, onRequestQuote }: Props) {
           </div>
         </div>
 
-        <div className="pricing-block">
-          <div className="pricing-range-label">
-            Estimated Investment — Professional Installation Included
-            {priceChanged && (
-              <span style={{ marginLeft: 8, color: 'var(--sc-orange)', fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600, textTransform: 'none', letterSpacing: 0 }}>
-                · adjusted
-              </span>
-            )}
-          </div>
-          <div className="pricing-range">
-            ${totalEstimate.low.toLocaleString()} – ${totalEstimate.high.toLocaleString()}
-          </div>
-          <div className="pricing-note">
-            Equipment + labor. Final investment determined at your on-site assessment.
-          </div>
-          <div className="monitoring-pill">
-            <div className="monitoring-pill-dot" />
-            <div className="monitoring-pill-text">
-              Alarm.com monitoring: <strong>${MONITORING_RANGE.low.toFixed(2)}–${MONITORING_RANGE.high.toFixed(2)} / month</strong> after installation
+        {estimateUnlocked ? (
+          <div className="pricing-block">
+            <div className="pricing-range-label">
+              Estimated Investment — Professional Installation Included
+              {priceChanged && (
+                <span style={{ marginLeft: 8, color: 'var(--sc-orange)', fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600, textTransform: 'none', letterSpacing: 0 }}>
+                  · adjusted
+                </span>
+              )}
+            </div>
+            <div className="pricing-range">
+              ${totalEstimate.low.toLocaleString()} – ${totalEstimate.high.toLocaleString()}
+            </div>
+            <div className="pricing-note">
+              Equipment + labor. Final investment determined at your on-site assessment.
+            </div>
+            <div className="monitoring-pill">
+              <div className="monitoring-pill-dot" />
+              <div className="monitoring-pill-text">
+                Alarm.com monitoring: <strong>${MONITORING_RANGE.low.toFixed(2)}–${MONITORING_RANGE.high.toFixed(2)} / month</strong> after installation
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="pricing-block pricing-block--gated">
+            <div className="pricing-range-label">
+              Estimated Investment — Professional Installation Included
+            </div>
+            <div className="pricing-range pricing-range--blurred" aria-hidden="true">
+              ${placeholder.low} – ${placeholder.high}
+            </div>
+            <p className="pricing-gate-hint">
+              Enter your contact info to reveal your personalized estimate.
+            </p>
+          </div>
+        )}
 
         <div className="cta-block">
-          <div className="cta-note">
-            Ready for exact numbers? Our team will visit your property, walk every entry point, and provide a formal written quote.
-          </div>
-          <button
-            className="btn-cta"
-            onClick={() => onRequestQuote(buildEquipmentListText(), totalEstimate)}
-          >
-            Request Quote
-          </button>
+          {estimateUnlocked ? (
+            <p className="cta-note cta-note--unlocked">
+              Want a formal written quote? We&apos;ll confirm every detail during your on-site assessment.
+            </p>
+          ) : (
+            <>
+              <p className="cta-note">
+                Your custom estimate is ready. Share your contact details to see your investment range instantly.
+              </p>
+              <button
+                ref={ctaRef}
+                type="button"
+                className="btn-cta"
+                onClick={handleRevealClick}
+              >
+                Reveal My Estimate
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
