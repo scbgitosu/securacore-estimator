@@ -19,7 +19,6 @@ const EQUIPMENT_CATALOG_ORDER = [
   'Garage Door Tilt Sensor',
   'Glass Break Sensor',
   'Mobile App & Remote Access',
-  'Alarm.com Premium Integration',
   'Water Leak Sensor',
 ] as const;
 
@@ -56,7 +55,6 @@ export function buildEquipment(cfg: SystemConfig): EquipmentItem[] {
   if (cfg.tier === 'Essential' || cfg.tier === 'Complete' || cfg.tier === 'Ultimate') {
     items.push({ name: 'Motion Detectors', baseQty: 2 });
     items.push({ name: 'Mobile App & Remote Access', baseQty: 1 });
-    items.push({ name: 'Alarm.com Premium Integration', baseQty: 1 });
   }
 
   if (cfg.tier === 'Complete' || cfg.tier === 'Ultimate') {
