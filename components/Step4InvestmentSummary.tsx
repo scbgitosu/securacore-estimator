@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import Image from 'next/image';
-import type { SystemConfig } from '@/types';
-import { buildFullEquipmentCatalog } from '@/lib/equipment';
+import type { SystemConfig, EquipmentItem } from '@/types';
+import { MAX_ITEM_QTY } from '@/lib/equipment';
 import { computeLaborPricing, computeTotalEstimate } from '@/lib/pricing';
 import { MONITORING_RANGE } from '@/pricing-config';
 
@@ -27,7 +27,8 @@ const HOME_SIZE_LABELS: Record<string, string> = {
   large:  'Large (exceeds 3500 sq ft)',
 };
 
-/** Fake ranges for gated teaser — not derived from real pricing. */
+// Fake ranges for the gated teaser — not derived from real pricing, so the
+// locked DOM never contains the customer's actual estimate.
 const PLACEHOLDER_BY_TIER: Record<string, { low: string; high: string }> = {
   Essential: { low: '3,500', high: '7,500' },
   Complete:  { low: '5,000', high: '10,500' },
@@ -35,12 +36,11 @@ const PLACEHOLDER_BY_TIER: Record<string, { low: string; high: string }> = {
 };
 const DEFAULT_PLACEHOLDER = { low: '4,500', high: '9,200' };
 
-// Sanity ceiling on per-item quantity — prevents accidental ballooning of the
-// estimate (e.g. user holding the "+" button) and silly screenshots.
-const MAX_ITEM_QTY = 25;
-
 interface Props {
   cfg: SystemConfig;
+  equipment: EquipmentItem[];
+  qtys: Record<string, number>;
+  setQty: (name: string, val: number) => void;
   estimateUnlocked: boolean;
   onSeeEstimate: (
     equipmentList: string,
@@ -49,32 +49,14 @@ interface Props {
   ) => void;
 }
 
-export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }: Props) {
+export function Step4InvestmentSummary({ cfg, equipment, qtys, setQty, estimateUnlocked, onSeeEstimate }: Props) {
   const ctaRef = useRef<HTMLButtonElement>(null);
 
-  const equipment = useMemo(
-    () => buildFullEquipmentCatalog(cfg),
-    [cfg.tier, cfg.cameraScope, cfg.doors]
-  );
-
-  // Defensive fallback: the wizard guards us from getting here without tier
-  // and cameraScope set, but a deep link or future routing change could land
-  // a user here directly. Render a zeroed estimate instead of crashing.
+  // Labor is now per-equipment, so it tracks the live quantities.
   const laborPricing = useMemo(
-    () => computeLaborPricing(cfg) ?? { low: 0, high: 0 },
-    [cfg.tier, cfg.cameraScope, cfg.doors]
+    () => computeLaborPricing(equipment, qtys),
+    [equipment, qtys]
   );
-
-  const equipKey = equipment.map(e => `${e.name}:${e.baseQty}`).join('|');
-
-  const [qtys, setQtys] = useState<Record<string, number>>(() =>
-    Object.fromEntries(equipment.map(item => [item.name, item.baseQty]))
-  );
-
-  useEffect(() => {
-    setQtys(Object.fromEntries(equipment.map(item => [item.name, item.baseQty])));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [equipKey]);
 
   // Depend on primitive bounds — memo deps stay stable across renders.
   const totalEstimate = useMemo(
@@ -83,11 +65,13 @@ export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }:
     [qtys, equipment, laborPricing.low, laborPricing.high]
   );
 
+  // Baseline (unedited) total, used to detect the "· adjusted" badge. Labor
+  // depends on quantities now, so it must be computed from the defaults too.
   const catalogDefaultTotal = useMemo(() => {
     const defaults = Object.fromEntries(equipment.map(item => [item.name, item.baseQty]));
-    return computeTotalEstimate(laborPricing, equipment, defaults);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [equipment, laborPricing.low, laborPricing.high]);
+    const defaultLabor = computeLaborPricing(equipment, defaults);
+    return computeTotalEstimate(defaultLabor, equipment, defaults);
+  }, [equipment]);
 
   const sortedEquipment = useMemo(() => {
     const catalogOrder = new Map(equipment.map((item, i) => [item.name, i]));
@@ -101,16 +85,23 @@ export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }:
     });
   }, [equipment, qtys]);
 
+  // Custom builds have no tier-suggested baseline (every baseQty is 0), so
+  // there's nothing to have been "adjusted" from — only show the badge when
+  // there was an actual suggested catalog to diverge from.
   const priceChanged =
-    totalEstimate.low !== catalogDefaultTotal.low ||
-    totalEstimate.high !== catalogDefaultTotal.high;
+    !!cfg.tier &&
+    (totalEstimate.low !== catalogDefaultTotal.low ||
+      totalEstimate.high !== catalogDefaultTotal.high);
+
+  const hasSelection = equipment.some(item => (qtys[item.name] ?? item.baseQty) > 0);
+
+  // Live count, not cfg.doors: "Door Sensors" is independently editable via
+  // its own qty stepper below, so the header chip must track that value or
+  // it can disagree with what's actually priced and sent to the CRM.
+  const doorCount = qtys['Door Sensors'] ?? equipment.find(item => item.name === 'Door Sensors')?.baseQty ?? 0;
 
   const placeholder =
     (cfg.tier && PLACEHOLDER_BY_TIER[cfg.tier]) || DEFAULT_PLACEHOLDER;
-
-  function setQty(name: string, val: number) {
-    setQtys(p => ({ ...p, [name]: Math.max(0, Math.min(MAX_ITEM_QTY, val)) }));
-  }
 
   function buildEquipmentListText() {
     const selectedItems = equipment
@@ -132,16 +123,18 @@ export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }:
       <div className="summary-header">
         <div>
           <p className="step-eyebrow">Your System Design</p>
-          <h2 className="step-title">{cfg.tier} Package</h2>
+          <h2 className="step-title">{cfg.tier ? `${cfg.tier} Package` : 'Custom System'}</h2>
           <div className="config-chips">
             <span className="config-chip">{HOME_TYPE_LABELS[cfg.homeType!] ?? '—'}</span>
             <span className="config-chip">
-              {cfg.doors}{cfg.doors !== 1 ? ' Doors' : ' Door'}
+              {doorCount}{doorCount !== 1 ? ' Doors' : ' Door'}
             </span>
             <span className="config-chip">
               {cfg.homeSize ? HOME_SIZE_LABELS[cfg.homeSize] ?? cfg.homeSize : '—'}
             </span>
-            <span className="config-chip">{CAMERA_SCOPE_LABELS[cfg.cameraScope!] ?? '—'}</span>
+            {cfg.cameraScope && (
+              <span className="config-chip">{CAMERA_SCOPE_LABELS[cfg.cameraScope] ?? '—'}</span>
+            )}
           </div>
         </div>
         <Image src="/assets/logo-mark.png" alt="SecuraCore" width={48} height={48} className="summary-mark" />
@@ -229,13 +222,16 @@ export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }:
           ) : (
             <>
               <p className="cta-note">
-                Your custom estimate is ready. Share your contact details to see your investment range instantly.
+                {hasSelection
+                  ? 'Your custom estimate is ready. Share your contact details to see your investment range instantly.'
+                  : 'Select at least one item above to see your investment range.'}
               </p>
               <button
                 ref={ctaRef}
                 type="button"
                 className="btn-cta"
                 onClick={handleRevealClick}
+                disabled={!hasSelection}
               >
                 Reveal My Estimate
               </button>

@@ -1,5 +1,9 @@
 import type { SystemConfig, EquipmentItem } from '@/types';
 
+// Sanity ceiling on per-item quantity — prevents accidental ballooning of the
+// estimate (e.g. user holding the "+" button) and silly screenshots.
+export const MAX_ITEM_QTY = 25;
+
 const EQUIPMENT_CATALOG_ORDER = [
   '7" Wall/Counter Security Control Panel',
   'Door Sensors',
@@ -12,6 +16,8 @@ const EQUIPMENT_CATALOG_ORDER = [
   'Carbon Monoxide Detector',
   'Smart Lock - Keyless Entry',
   'Overhead Garage Door Control',
+  'Garage Door Tilt Sensor',
+  'Glass Break Sensor',
   'Mobile App & Remote Access',
   'Alarm.com Premium Integration',
   'Water Leak Sensor',
@@ -61,6 +67,8 @@ export function buildEquipment(cfg: SystemConfig): EquipmentItem[] {
   if (cfg.tier === 'Ultimate') {
     items.push({ name: 'Smart Lock - Keyless Entry', baseQty: 1 });
     items.push({ name: 'Overhead Garage Door Control', baseQty: 1 });
+    items.push({ name: 'Garage Door Tilt Sensor', baseQty: 1 });
+    items.push({ name: 'Glass Break Sensor', baseQty: 1 });
     items.push({ name: 'Water Leak Sensor', baseQty: 1 });
   }
 

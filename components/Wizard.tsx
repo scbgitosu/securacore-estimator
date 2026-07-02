@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import type { SystemConfig } from '@/types';
 import {
   configUnlockKey,
@@ -8,6 +8,7 @@ import {
   isConfigUnlocked,
   writeUnlockKey,
 } from '@/lib/estimate-unlock';
+import { buildFullEquipmentCatalog, MAX_ITEM_QTY } from '@/lib/equipment';
 import { Step1PropertyProfile } from './Step1PropertyProfile';
 import { Step2SecurityTier } from './Step2SecurityTier';
 import { Step3SurveillanceScope } from './Step3SurveillanceScope';
@@ -62,6 +63,10 @@ function CheckDone() {
 
 export function Wizard() {
   const [step, setStep] = useState(0);
+  const [mode, setMode] = useState<'guided' | 'custom'>('guided');
+  // Bumped on every "Build My Own System" click so each custom build gets its
+  // own unlock key — see startCustom() and lib/estimate-unlock.ts.
+  const [customBuildId, setCustomBuildId] = useState(0);
   const [cfg, setCfg] = useState<SystemConfig>(DEFAULT_CONFIG);
   const [estimateUnlocked, setEstimateUnlocked] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -74,10 +79,32 @@ export function Wizard() {
   const [animKey, setAnimKey] = useState(0);
   const maxHeightRef = useRef(0);
 
-  const unlockKey = configUnlockKey(cfg);
+  // Equipment quantities live here (not in Step4) so that navigating away
+  // from and back to the summary — e.g. custom builders using "Edit
+  // Selections" — doesn't remount-and-discard in-progress edits.
+  const equipment = useMemo(
+    () => buildFullEquipmentCatalog(cfg),
+    [cfg.tier, cfg.cameraScope, cfg.doors]
+  );
+  const equipKey = equipment.map(e => `${e.name}:${e.baseQty}`).join('|');
+
+  const [qtys, setQtys] = useState<Record<string, number>>(() =>
+    Object.fromEntries(equipment.map(item => [item.name, item.baseQty]))
+  );
 
   useEffect(() => {
-    setEstimateUnlocked(isConfigUnlocked(cfg));
+    setQtys(Object.fromEntries(equipment.map(item => [item.name, item.baseQty])));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [equipKey]);
+
+  function setQty(name: string, val: number) {
+    setQtys(p => ({ ...p, [name]: Math.max(0, Math.min(MAX_ITEM_QTY, val)) }));
+  }
+
+  const unlockKey = configUnlockKey(cfg, customBuildId);
+
+  useEffect(() => {
+    setEstimateUnlocked(isConfigUnlocked(cfg, customBuildId));
   }, [unlockKey]);
 
   const handleUnlockEstimate = useCallback(() => {
@@ -187,9 +214,35 @@ export function Wizard() {
 
   function goBack() {
     if (step > 0) {
-      setStep(s => s - 1);
+      // Custom builders skip straight from Step 1 to the summary, so "Edit
+      // Selections" returns them to Step 1 rather than the unused tier/scope steps.
+      setStep(s => (mode === 'custom' ? 0 : s - 1));
       setAnimKey(k => k + 1);
     }
+  }
+
+  // "Let SecuraCore Design My System" — the guided tier → scope → summary flow.
+  function startGuided() {
+    setMode('guided');
+    goNext();
+  }
+
+  // "Build My Own System" — jump to the equipment list with nothing preselected.
+  // With no tier set, the summary renders the full catalog at qty 0 to build up.
+  function startCustom() {
+    if (!canAdvance(0, cfg)) return;
+    // Clear any tier/scope left over from exploring the guided path so the
+    // summary starts as a truly blank catalog (all quantities 0).
+    setCfg(p => ({ ...p, tier: null, cameraScope: null }));
+    // Explicit reset: with tier/cameraScope null, every custom build's
+    // equipment catalog has baseQty 0 for every item regardless of home
+    // type/doors, so the equipKey effect below has nothing to change and
+    // won't reset stale quantities from a prior custom build on its own.
+    setQtys(Object.fromEntries(equipment.map(item => [item.name, 0])));
+    setCustomBuildId(id => id + 1);
+    setMode('custom');
+    setStep(3);
+    setAnimKey(k => k + 1);
   }
 
   function restart() {
@@ -197,6 +250,8 @@ export function Wizard() {
     clearUnlockKey();
     setEstimateUnlocked(false);
     setCfg(DEFAULT_CONFIG);
+    setMode('guided');
+    setCustomBuildId(0);
     setStep(0);
     setAnimKey(k => k + 1);
     setShowModal(false);
@@ -252,15 +307,28 @@ export function Wizard() {
           {step === 3 && (
             <Step4InvestmentSummary
               cfg={cfg}
+              equipment={equipment}
+              qtys={qtys}
+              setQty={setQty}
               estimateUnlocked={estimateUnlocked}
               onSeeEstimate={handleSeeEstimate}
             />
           )}
 
           {/* Navigation */}
-          {step < 3 ? (
+          {step === 0 ? (
+            <div className="wiz-choice-btns">
+              <button className="btn-next" onClick={startGuided} disabled={!canAdvance(0, cfg)}>
+                Let SecuraCore Design My System
+                <ArrowRight />
+              </button>
+              <button className="btn-secondary" onClick={startCustom} disabled={!canAdvance(0, cfg)}>
+                Build My Own System
+              </button>
+            </div>
+          ) : step < 3 ? (
             <div className="wiz-nav-btns">
-              <button className="btn-back" onClick={goBack} style={{ visibility: step === 0 ? 'hidden' : 'visible' }}>
+              <button className="btn-back" onClick={goBack}>
                 <ArrowLeft />
                 Back
               </button>

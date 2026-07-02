@@ -4,9 +4,10 @@
 // Edit this file to adjust all pricing shown to customers.
 // Changes here flow through to the live estimate automatically.
 //
-// Model: tier + camera scope + extra doors = labor estimate; equipment lines
-// from the wizard catalog add materials at UNIT_PRICES × quantity (default
-// quantities come from tier, doors, and surveillance selections).
+// Model: labor is per-equipment — each catalog line contributes
+// (quantity × LABOR_HOURS × LABOR_RATE) with a low→high band; equipment lines
+// add materials at UNIT_PRICES × quantity. Default quantities come from tier,
+// doors, and surveillance selections.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { HomeType } from '@/types';
@@ -19,30 +20,32 @@ export const DOORS_BY_HOME_TYPE: Record<HomeType, number> = {
   business: 5,
 };
 
-// ── Installation labor bands by security tier ─────────────────────────────────
-// Baseline programming, panel install, and typical on-site time for that tier.
-// Does not include equipment cost — that comes from the catalog × UNIT_PRICES.
-export const TIER_LABOR = {
-  Essential: { low: 350, high: 750 },
-  Complete: { low: 700, high: 1200 },
-  Ultimate: { low: 1200, high: 2000 },
-} as const;
+// ── Installation labor (per-equipment hours model) ────────────────────────────
+// Each catalog line contributes labor = quantity × its LABOR_HOURS × LABOR_RATE.
+// The low bound is that figure; the high bound multiplies it by
+// LABOR_HIGH_MULTIPLIER. Items not listed fall back to DEFAULT_LABOR_HOURS.
+export const LABOR_RATE = 149; // $/hour
+export const LABOR_HIGH_MULTIPLIER = 1.7; // high = low × this (calibrated to hold tops ≤ prior model)
+export const DEFAULT_LABOR_HOURS = 0.33; // fallback for any item not listed below
 
-// ── Additional labor by surveillance scope ────────────────────────────────────
-// Extra mounting, cable pulls, and configuration when camera count / coverage
-// increases. Camera hardware itself is priced via Outdoor/Indoor Camera units.
-export const CAMERA_SCOPE_LABOR = {
-  'front-only': { low: 149, high: 300 },
-  perimeter: { low: 300, high: 600 },
-  'full-coverage': { low: 650, high: 800 },
-  'no-surveillance': { low: 0, high: 0 },
-} as const;
-
-// ── Labor per exterior door beyond the first ──────────────────────────────────
-// Additional terminations, sensor placement, and testing per opening.
-export const EXTRA_DOOR_LABOR = {
-  door: { low: 45, high: 75 },
-} as const;
+export const LABOR_HOURS: Record<string, number> = {
+  '7" Wall/Counter Security Control Panel': 1,
+  'Door Sensors': 0.33,
+  'Outdoor Camera': 1,
+  'Indoor Camera': 0.5,
+  '24/7 Onboard Recording': 0,
+  'Video Doorbell': 0.5,
+  'Motion Detectors': 0.33,
+  'Smoke Detectors': 0.33,
+  'Carbon Monoxide Detector': 0.33,
+  'Smart Lock - Keyless Entry': 0.5,
+  'Overhead Garage Door Control': 0.5,
+  'Mobile App & Remote Access': 0,
+  'Alarm.com Premium Integration': 0,
+  'Water Leak Sensor': 0.33,
+  'Glass Break Sensor': 0.33,
+  'Garage Door Tilt Sensor': 0.33,
+};
 
 // ── Monthly monitoring range ───────────────────────────────────────────────────
 export const MONITORING_RANGE = { low: 44.99, high: 79.99 } as const;
@@ -65,6 +68,8 @@ export const UNIT_PRICES: Record<string, { low: number; high: number }> = {
   'Mobile App & Remote Access': { low: 0, high: 0 },
   'Alarm.com Premium Integration': { low: 0, high: 0 },
   'Water Leak Sensor': { low: 100, high: 250 },
+  'Glass Break Sensor': { low: 79, high: 179 },
+  'Garage Door Tilt Sensor': { low: 49, high: 149 },
 };
 
 // Fallback price for any equipment item not explicitly listed above
