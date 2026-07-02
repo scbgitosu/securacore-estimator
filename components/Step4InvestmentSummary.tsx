@@ -109,7 +109,7 @@ export function Step4InvestmentSummary({ cfg, equipment, qtys, setQty, estimateU
       .filter(item => item.qty > 0)
       .map(item => `${item.name} x${item.qty}`);
 
-    return selectedItems.length > 0 ? selectedItems.join(', ') : 'None selected';
+    return selectedItems.length > 0 ? selectedItems.join('\n') : 'None selected';
   }
 
   function handleRevealClick() {

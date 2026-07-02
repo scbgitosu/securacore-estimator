@@ -193,7 +193,14 @@ export async function POST(request: Request) {
         homeSize:    systemConfig.homeSize ?? '',
         estimateLow,
         estimateHigh,
+        // Newline-delimited, one item per line — for Text-element email blocks
+        // that preserve line breaks.
         equipmentList: equipmentList ?? '',
+        // <br>-delimited fallback for HTML-element email blocks, in case the
+        // Text block above collapses literal newlines. Requires a matching
+        // "equipmentListHtml" text field on the SecurityEstimatorLeads
+        // collection before it will show up as automation data.
+        equipmentListHtml: (equipmentList ?? '').split('\n').join('<br>'),
       },
     },
   };
