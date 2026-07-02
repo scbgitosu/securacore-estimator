@@ -64,6 +64,9 @@ function CheckDone() {
 export function Wizard() {
   const [step, setStep] = useState(0);
   const [mode, setMode] = useState<'guided' | 'custom'>('guided');
+  // Bumped on every "Build My Own System" click so each custom build gets its
+  // own unlock key — see startCustom() and lib/estimate-unlock.ts.
+  const [customBuildId, setCustomBuildId] = useState(0);
   const [cfg, setCfg] = useState<SystemConfig>(DEFAULT_CONFIG);
   const [estimateUnlocked, setEstimateUnlocked] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -98,10 +101,10 @@ export function Wizard() {
     setQtys(p => ({ ...p, [name]: Math.max(0, Math.min(MAX_ITEM_QTY, val)) }));
   }
 
-  const unlockKey = configUnlockKey(cfg);
+  const unlockKey = configUnlockKey(cfg, customBuildId);
 
   useEffect(() => {
-    setEstimateUnlocked(isConfigUnlocked(cfg));
+    setEstimateUnlocked(isConfigUnlocked(cfg, customBuildId));
   }, [unlockKey]);
 
   const handleUnlockEstimate = useCallback(() => {
@@ -231,6 +234,12 @@ export function Wizard() {
     // Clear any tier/scope left over from exploring the guided path so the
     // summary starts as a truly blank catalog (all quantities 0).
     setCfg(p => ({ ...p, tier: null, cameraScope: null }));
+    // Explicit reset: with tier/cameraScope null, every custom build's
+    // equipment catalog has baseQty 0 for every item regardless of home
+    // type/doors, so the equipKey effect below has nothing to change and
+    // won't reset stale quantities from a prior custom build on its own.
+    setQtys(Object.fromEntries(equipment.map(item => [item.name, 0])));
+    setCustomBuildId(id => id + 1);
     setMode('custom');
     setStep(3);
     setAnimKey(k => k + 1);
@@ -242,6 +251,7 @@ export function Wizard() {
     setEstimateUnlocked(false);
     setCfg(DEFAULT_CONFIG);
     setMode('guided');
+    setCustomBuildId(0);
     setStep(0);
     setAnimKey(k => k + 1);
     setShowModal(false);

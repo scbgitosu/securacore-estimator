@@ -2,8 +2,12 @@ import type { SystemConfig } from '@/types';
 
 const STORAGE_KEY = 'sc-estimate-unlocked';
 
-export function configUnlockKey(cfg: SystemConfig): string {
-  return [cfg.homeType, cfg.homeSize, cfg.tier, cfg.cameraScope, cfg.doors].join('|');
+// `buildId` distinguishes separate "Build My Own System" sessions. Custom
+// builds always carry tier: null, cameraScope: null, so without it every
+// custom build for the same home profile hashes to the same key — unlocking
+// once would silently unlock every future custom build in the session.
+export function configUnlockKey(cfg: SystemConfig, buildId: number): string {
+  return [cfg.homeType, cfg.homeSize, cfg.tier, cfg.cameraScope, cfg.doors, buildId].join('|');
 }
 
 export function readUnlockKey(): string | null {
@@ -33,8 +37,8 @@ export function clearUnlockKey(): void {
   }
 }
 
-export function isConfigUnlocked(cfg: SystemConfig): boolean {
+export function isConfigUnlocked(cfg: SystemConfig, buildId: number): boolean {
   const stored = readUnlockKey();
   if (!stored) return false;
-  return stored === configUnlockKey(cfg);
+  return stored === configUnlockKey(cfg, buildId);
 }

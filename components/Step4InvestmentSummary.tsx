@@ -85,11 +85,20 @@ export function Step4InvestmentSummary({ cfg, equipment, qtys, setQty, estimateU
     });
   }, [equipment, qtys]);
 
+  // Custom builds have no tier-suggested baseline (every baseQty is 0), so
+  // there's nothing to have been "adjusted" from — only show the badge when
+  // there was an actual suggested catalog to diverge from.
   const priceChanged =
-    totalEstimate.low !== catalogDefaultTotal.low ||
-    totalEstimate.high !== catalogDefaultTotal.high;
+    !!cfg.tier &&
+    (totalEstimate.low !== catalogDefaultTotal.low ||
+      totalEstimate.high !== catalogDefaultTotal.high);
 
   const hasSelection = equipment.some(item => (qtys[item.name] ?? item.baseQty) > 0);
+
+  // Live count, not cfg.doors: "Door Sensors" is independently editable via
+  // its own qty stepper below, so the header chip must track that value or
+  // it can disagree with what's actually priced and sent to the CRM.
+  const doorCount = qtys['Door Sensors'] ?? equipment.find(item => item.name === 'Door Sensors')?.baseQty ?? 0;
 
   const placeholder =
     (cfg.tier && PLACEHOLDER_BY_TIER[cfg.tier]) || DEFAULT_PLACEHOLDER;
@@ -118,7 +127,7 @@ export function Step4InvestmentSummary({ cfg, equipment, qtys, setQty, estimateU
           <div className="config-chips">
             <span className="config-chip">{HOME_TYPE_LABELS[cfg.homeType!] ?? '—'}</span>
             <span className="config-chip">
-              {cfg.doors}{cfg.doors !== 1 ? ' Doors' : ' Door'}
+              {doorCount}{doorCount !== 1 ? ' Doors' : ' Door'}
             </span>
             <span className="config-chip">
               {cfg.homeSize ? HOME_SIZE_LABELS[cfg.homeSize] ?? cfg.homeSize : '—'}
