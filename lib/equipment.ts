@@ -1,5 +1,9 @@
 import type { SystemConfig, EquipmentItem } from '@/types';
 
+// Sanity ceiling on per-item quantity — prevents accidental ballooning of the
+// estimate (e.g. user holding the "+" button) and silly screenshots.
+export const MAX_ITEM_QTY = 25;
+
 const EQUIPMENT_CATALOG_ORDER = [
   '7" Wall/Counter Security Control Panel',
   'Door Sensors',

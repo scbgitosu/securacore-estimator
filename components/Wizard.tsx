@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import type { SystemConfig } from '@/types';
 import {
   configUnlockKey,
@@ -8,6 +8,7 @@ import {
   isConfigUnlocked,
   writeUnlockKey,
 } from '@/lib/estimate-unlock';
+import { buildFullEquipmentCatalog, MAX_ITEM_QTY } from '@/lib/equipment';
 import { Step1PropertyProfile } from './Step1PropertyProfile';
 import { Step2SecurityTier } from './Step2SecurityTier';
 import { Step3SurveillanceScope } from './Step3SurveillanceScope';
@@ -74,6 +75,28 @@ export function Wizard() {
   });
   const [animKey, setAnimKey] = useState(0);
   const maxHeightRef = useRef(0);
+
+  // Equipment quantities live here (not in Step4) so that navigating away
+  // from and back to the summary — e.g. custom builders using "Edit
+  // Selections" — doesn't remount-and-discard in-progress edits.
+  const equipment = useMemo(
+    () => buildFullEquipmentCatalog(cfg),
+    [cfg.tier, cfg.cameraScope, cfg.doors]
+  );
+  const equipKey = equipment.map(e => `${e.name}:${e.baseQty}`).join('|');
+
+  const [qtys, setQtys] = useState<Record<string, number>>(() =>
+    Object.fromEntries(equipment.map(item => [item.name, item.baseQty]))
+  );
+
+  useEffect(() => {
+    setQtys(Object.fromEntries(equipment.map(item => [item.name, item.baseQty])));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [equipKey]);
+
+  function setQty(name: string, val: number) {
+    setQtys(p => ({ ...p, [name]: Math.max(0, Math.min(MAX_ITEM_QTY, val)) }));
+  }
 
   const unlockKey = configUnlockKey(cfg);
 
@@ -274,6 +297,9 @@ export function Wizard() {
           {step === 3 && (
             <Step4InvestmentSummary
               cfg={cfg}
+              equipment={equipment}
+              qtys={qtys}
+              setQty={setQty}
               estimateUnlocked={estimateUnlocked}
               onSeeEstimate={handleSeeEstimate}
             />

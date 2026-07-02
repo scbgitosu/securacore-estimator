@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import Image from 'next/image';
-import type { SystemConfig } from '@/types';
-import { buildFullEquipmentCatalog } from '@/lib/equipment';
+import type { SystemConfig, EquipmentItem } from '@/types';
+import { MAX_ITEM_QTY } from '@/lib/equipment';
 import { computeLaborPricing, computeTotalEstimate } from '@/lib/pricing';
 import { MONITORING_RANGE } from '@/pricing-config';
 
@@ -27,12 +27,20 @@ const HOME_SIZE_LABELS: Record<string, string> = {
   large:  'Large (exceeds 3500 sq ft)',
 };
 
-// Sanity ceiling on per-item quantity — prevents accidental ballooning of the
-// estimate (e.g. user holding the "+" button) and silly screenshots.
-const MAX_ITEM_QTY = 25;
+// Fake ranges for the gated teaser — not derived from real pricing, so the
+// locked DOM never contains the customer's actual estimate.
+const PLACEHOLDER_BY_TIER: Record<string, { low: string; high: string }> = {
+  Essential: { low: '3,500', high: '7,500' },
+  Complete:  { low: '5,000', high: '10,500' },
+  Ultimate:  { low: '7,500', high: '14,000' },
+};
+const DEFAULT_PLACEHOLDER = { low: '4,500', high: '9,200' };
 
 interface Props {
   cfg: SystemConfig;
+  equipment: EquipmentItem[];
+  qtys: Record<string, number>;
+  setQty: (name: string, val: number) => void;
   estimateUnlocked: boolean;
   onSeeEstimate: (
     equipmentList: string,
@@ -41,24 +49,8 @@ interface Props {
   ) => void;
 }
 
-export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }: Props) {
+export function Step4InvestmentSummary({ cfg, equipment, qtys, setQty, estimateUnlocked, onSeeEstimate }: Props) {
   const ctaRef = useRef<HTMLButtonElement>(null);
-
-  const equipment = useMemo(
-    () => buildFullEquipmentCatalog(cfg),
-    [cfg.tier, cfg.cameraScope, cfg.doors]
-  );
-
-  const equipKey = equipment.map(e => `${e.name}:${e.baseQty}`).join('|');
-
-  const [qtys, setQtys] = useState<Record<string, number>>(() =>
-    Object.fromEntries(equipment.map(item => [item.name, item.baseQty]))
-  );
-
-  useEffect(() => {
-    setQtys(Object.fromEntries(equipment.map(item => [item.name, item.baseQty])));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [equipKey]);
 
   // Labor is now per-equipment, so it tracks the live quantities.
   const laborPricing = useMemo(
@@ -97,9 +89,10 @@ export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }:
     totalEstimate.low !== catalogDefaultTotal.low ||
     totalEstimate.high !== catalogDefaultTotal.high;
 
-  function setQty(name: string, val: number) {
-    setQtys(p => ({ ...p, [name]: Math.max(0, Math.min(MAX_ITEM_QTY, val)) }));
-  }
+  const hasSelection = equipment.some(item => (qtys[item.name] ?? item.baseQty) > 0);
+
+  const placeholder =
+    (cfg.tier && PLACEHOLDER_BY_TIER[cfg.tier]) || DEFAULT_PLACEHOLDER;
 
   function buildEquipmentListText() {
     const selectedItems = equipment
@@ -204,7 +197,7 @@ export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }:
               Estimated Investment — Professional Installation Included
             </div>
             <div className="pricing-range pricing-range--blurred" aria-hidden="true">
-              ${totalEstimate.low.toLocaleString()} – ${totalEstimate.high.toLocaleString()}
+              ${placeholder.low} – ${placeholder.high}
             </div>
             <p className="pricing-gate-hint">
               Enter your contact info to reveal your personalized estimate.
@@ -220,13 +213,16 @@ export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }:
           ) : (
             <>
               <p className="cta-note">
-                Your custom estimate is ready. Share your contact details to see your investment range instantly.
+                {hasSelection
+                  ? 'Your custom estimate is ready. Share your contact details to see your investment range instantly.'
+                  : 'Select at least one item above to see your investment range.'}
               </p>
               <button
                 ref={ctaRef}
                 type="button"
                 className="btn-cta"
                 onClick={handleRevealClick}
+                disabled={!hasSelection}
               >
                 Reveal My Estimate
               </button>

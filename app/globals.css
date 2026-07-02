@@ -779,6 +779,8 @@ html, body {
   transition: background .15s;
 }
 .btn-cta:hover { background: var(--sc-orange-hover); }
+.btn-cta:disabled { background: var(--sc-grey-300); cursor: not-allowed; }
+.btn-cta:disabled:hover { background: var(--sc-grey-300); }
 
 .config-chip {
   display: inline-flex;

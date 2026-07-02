@@ -72,7 +72,10 @@ export function computeTotalEstimate(
   qtys: Record<string, number>
 ): { low: number; high: number } {
   const mat = computeMaterialsCost(equipment, qtys);
-  const low = Math.max(0, floorTo100(labor.low + mat.low));
+  const rawLow = labor.low + mat.low;
+  // A nonzero cost should never floor down to a $0 headline — that reads as
+  // "free" for a system that includes paid equipment.
+  const low = rawLow > 0 ? Math.max(100, floorTo100(rawLow)) : 0;
   const highRaw = Math.max(0, ceilTo100(labor.high + mat.high));
   return { low, high: Math.max(low, highRaw) };
 }
