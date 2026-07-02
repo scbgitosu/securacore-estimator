@@ -60,7 +60,7 @@ export const MONITORING_RANGE = { low: 44.99, high: 79.99 } as const;
 // Quantities default from tier, door count, and camera scope in lib/equipment.
 // $0 items are bundled services / app access with no material line charge.
 export const UNIT_PRICES: Record<string, { low: number; high: number }> = {
-  '7" Wall/Counter Security Control Panel': { low: 500, high: 800 },
+  '7" Wall/Counter Security Control Panel': { low: 500, high: 700 },
   'Door Sensors': { low: 99, high: 99 },
   'Outdoor Camera': { low: 300, high: 400 },
   'Indoor Camera': { low: 200, high: 300 },
