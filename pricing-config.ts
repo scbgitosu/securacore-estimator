@@ -28,6 +28,12 @@ export const LABOR_RATE = 149; // $/hour
 export const LABOR_HIGH_MULTIPLIER = 1.7; // high = low × this (calibrated to hold tops ≤ prior model)
 export const DEFAULT_LABOR_HOURS = 0.33; // fallback for any item not listed below
 
+// Discounts only the displayed LOW end of the range (applied to materials+labor
+// before the $100 floor in computeTotalEstimate). High end and per-item costs
+// are unaffected. Calibrated against a real proposal that landed ~10% below
+// the quoted low — makes the "starting at" number a more enticing anchor.
+export const LOW_BAND_FACTOR = 0.9;
+
 export const LABOR_HOURS: Record<string, number> = {
   '7" Wall/Counter Security Control Panel': 1,
   'Door Sensors': 0.33,

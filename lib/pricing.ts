@@ -5,12 +5,10 @@ import {
   DEFAULT_LABOR_HOURS,
   UNIT_PRICES,
   DEFAULT_UNIT_PRICE,
+  LOW_BAND_FACTOR,
 } from '@/pricing-config';
 import type { EquipmentItem } from '@/types';
 
-// Round the displayed range so that it always brackets the underlying number:
-// floor the low bound to the nearest $100, ceil the high bound. This avoids
-// quoting a "starts at" price that is actually higher than the real low.
 function floorTo100(n: number): number {
   return Math.floor(n / 100) * 100;
 }
@@ -75,7 +73,7 @@ export function computeTotalEstimate(
   const rawLow = labor.low + mat.low;
   // A nonzero cost should never floor down to a $0 headline — that reads as
   // "free" for a system that includes paid equipment.
-  const low = rawLow > 0 ? Math.max(100, floorTo100(rawLow)) : 0;
+  const low = rawLow > 0 ? Math.max(100, floorTo100(rawLow * LOW_BAND_FACTOR)) : 0;
   const highRaw = Math.max(0, ceilTo100(labor.high + mat.high));
   return { low, high: Math.max(low, highRaw) };
 }
