@@ -4,8 +4,10 @@ import { useMemo, useRef } from 'react';
 import Image from 'next/image';
 import type { SystemConfig, EquipmentItem } from '@/types';
 import { MAX_ITEM_QTY } from '@/lib/equipment';
+import { getEquipmentDescription } from '@/lib/equipment-catalog';
 import { computeLaborPricing, computeTotalEstimate } from '@/lib/pricing';
 import { MONITORING_RANGE } from '@/pricing-config';
+import { EquipmentInfoTooltip } from './EquipmentInfoTooltip';
 
 const HOME_TYPE_LABELS: Record<string, string> = {
   'single-family': 'Single Family',
@@ -152,6 +154,7 @@ export function Step4InvestmentSummary({ cfg, equipment, qtys, setQty, estimateU
             {sortedEquipment.map(item => {
               const qty = qtys[item.name] ?? item.baseQty;
               const removed = qty === 0;
+              const description = getEquipmentDescription(item.name);
               return (
                 <div
                   key={item.name}
@@ -163,6 +166,9 @@ export function Step4InvestmentSummary({ cfg, equipment, qtys, setQty, estimateU
                     <div className="equipment-name" style={{ textDecoration: removed ? 'line-through' : 'none', color: removed ? 'var(--sc-grey-400)' : 'var(--sc-ink)' }}>
                       {item.name}
                     </div>
+                    {description && (
+                      <EquipmentInfoTooltip label={item.name} description={description} />
+                    )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', overflow: 'hidden', flexShrink: 0 }}>
                     <QtyBtn onClick={() => setQty(item.name, qty - 1)} label="−" disabled={qty <= 0} />

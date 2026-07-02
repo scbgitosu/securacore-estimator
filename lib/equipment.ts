@@ -18,8 +18,8 @@ const EQUIPMENT_CATALOG_ORDER = [
   'Overhead Garage Door Control',
   'Garage Door Tilt Sensor',
   'Glass Break Sensor',
-  'Mobile App & Remote Access',
   'Water Leak Sensor',
+  'Mobile App & Remote Access',
 ] as const;
 
 export function buildEquipment(cfg: SystemConfig): EquipmentItem[] {

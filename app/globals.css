@@ -673,6 +673,44 @@ html, body {
   font-weight: 500;
 }
 
+.equipment-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  border-radius: 50%;
+  background: var(--sc-white);
+  color: var(--sc-grey-500);
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.equipment-info-btn:hover,
+.equipment-info-btn:focus-visible {
+  color: var(--sc-orange);
+  border-color: var(--sc-orange);
+  background: var(--sc-orange-tint);
+  outline: none;
+}
+
+.equipment-info-tooltip {
+  position: fixed;
+  z-index: 100;
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--sc-ink);
+  background: var(--sc-white);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+}
+
 .pricing-block {
   padding: 28px 36px;
   background: var(--sc-grey-50);
