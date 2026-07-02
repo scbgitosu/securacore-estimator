@@ -706,7 +706,7 @@ html, body {
   text-align: center;
 }
 .pricing-range--blurred {
-  filter: blur(7px);
+  filter: blur(11px);
   user-select: none;
   pointer-events: none;
   color: var(--sc-grey-400);

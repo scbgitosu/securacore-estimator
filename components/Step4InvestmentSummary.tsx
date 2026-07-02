@@ -27,14 +27,6 @@ const HOME_SIZE_LABELS: Record<string, string> = {
   large:  'Large (exceeds 3500 sq ft)',
 };
 
-/** Fake ranges for gated teaser — not derived from real pricing. */
-const PLACEHOLDER_BY_TIER: Record<string, { low: string; high: string }> = {
-  Essential: { low: '3,500', high: '7,500' },
-  Complete:  { low: '5,000', high: '10,500' },
-  Ultimate:  { low: '7,500', high: '14,000' },
-};
-const DEFAULT_PLACEHOLDER = { low: '4,500', high: '9,200' };
-
 // Sanity ceiling on per-item quantity — prevents accidental ballooning of the
 // estimate (e.g. user holding the "+" button) and silly screenshots.
 const MAX_ITEM_QTY = 25;
@@ -104,9 +96,6 @@ export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }:
   const priceChanged =
     totalEstimate.low !== catalogDefaultTotal.low ||
     totalEstimate.high !== catalogDefaultTotal.high;
-
-  const placeholder =
-    (cfg.tier && PLACEHOLDER_BY_TIER[cfg.tier]) || DEFAULT_PLACEHOLDER;
 
   function setQty(name: string, val: number) {
     setQtys(p => ({ ...p, [name]: Math.max(0, Math.min(MAX_ITEM_QTY, val)) }));
@@ -215,7 +204,7 @@ export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }:
               Estimated Investment — Professional Installation Included
             </div>
             <div className="pricing-range pricing-range--blurred" aria-hidden="true">
-              ${placeholder.low} – ${placeholder.high}
+              ${totalEstimate.low.toLocaleString()} – ${totalEstimate.high.toLocaleString()}
             </div>
             <p className="pricing-gate-hint">
               Enter your contact info to reveal your personalized estimate.
