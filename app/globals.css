@@ -581,6 +581,38 @@ html, body {
 .btn-next:active { background: var(--sc-orange-press); transform: translateY(1px); }
 .btn-next:disabled { opacity: .4; cursor: not-allowed; }
 
+/* Step 1 dual entry: two full-width choices stacked (primary + secondary). */
+.wiz-choice-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border-subtle);
+}
+.wiz-choice-btns .btn-next,
+.wiz-choice-btns .btn-secondary { width: 100%; justify-content: center; }
+.btn-secondary {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  font-weight: 700;
+  background: #fff;
+  color: var(--sc-orange);
+  border: 1px solid var(--sc-orange);
+  border-radius: var(--radius-md);
+  padding: 14px 36px;
+  cursor: pointer;
+  transition: background .15s, color .15s, transform .1s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-secondary:hover { background: var(--sc-orange); color: #fff; }
+.btn-secondary:active { transform: translateY(1px); }
+.btn-secondary:disabled { opacity: .4; cursor: not-allowed; }
+
 /* ── Summary (Step 4) ───────────────────────────────────────────────────────── */
 
 .summary-header {

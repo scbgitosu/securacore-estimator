@@ -57,14 +57,6 @@ export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }:
     [cfg.tier, cfg.cameraScope, cfg.doors]
   );
 
-  // Defensive fallback: the wizard guards us from getting here without tier
-  // and cameraScope set, but a deep link or future routing change could land
-  // a user here directly. Render a zeroed estimate instead of crashing.
-  const laborPricing = useMemo(
-    () => computeLaborPricing(cfg) ?? { low: 0, high: 0 },
-    [cfg.tier, cfg.cameraScope, cfg.doors]
-  );
-
   const equipKey = equipment.map(e => `${e.name}:${e.baseQty}`).join('|');
 
   const [qtys, setQtys] = useState<Record<string, number>>(() =>
@@ -76,6 +68,12 @@ export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [equipKey]);
 
+  // Labor is now per-equipment, so it tracks the live quantities.
+  const laborPricing = useMemo(
+    () => computeLaborPricing(equipment, qtys),
+    [equipment, qtys]
+  );
+
   // Depend on primitive bounds — memo deps stay stable across renders.
   const totalEstimate = useMemo(
     () => computeTotalEstimate(laborPricing, equipment, qtys),
@@ -83,11 +81,13 @@ export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }:
     [qtys, equipment, laborPricing.low, laborPricing.high]
   );
 
+  // Baseline (unedited) total, used to detect the "· adjusted" badge. Labor
+  // depends on quantities now, so it must be computed from the defaults too.
   const catalogDefaultTotal = useMemo(() => {
     const defaults = Object.fromEntries(equipment.map(item => [item.name, item.baseQty]));
-    return computeTotalEstimate(laborPricing, equipment, defaults);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [equipment, laborPricing.low, laborPricing.high]);
+    const defaultLabor = computeLaborPricing(equipment, defaults);
+    return computeTotalEstimate(defaultLabor, equipment, defaults);
+  }, [equipment]);
 
   const sortedEquipment = useMemo(() => {
     const catalogOrder = new Map(equipment.map((item, i) => [item.name, i]));
@@ -132,7 +132,7 @@ export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }:
       <div className="summary-header">
         <div>
           <p className="step-eyebrow">Your System Design</p>
-          <h2 className="step-title">{cfg.tier} Package</h2>
+          <h2 className="step-title">{cfg.tier ? `${cfg.tier} Package` : 'Custom System'}</h2>
           <div className="config-chips">
             <span className="config-chip">{HOME_TYPE_LABELS[cfg.homeType!] ?? '—'}</span>
             <span className="config-chip">
@@ -141,7 +141,9 @@ export function Step4InvestmentSummary({ cfg, estimateUnlocked, onSeeEstimate }:
             <span className="config-chip">
               {cfg.homeSize ? HOME_SIZE_LABELS[cfg.homeSize] ?? cfg.homeSize : '—'}
             </span>
-            <span className="config-chip">{CAMERA_SCOPE_LABELS[cfg.cameraScope!] ?? '—'}</span>
+            {cfg.cameraScope && (
+              <span className="config-chip">{CAMERA_SCOPE_LABELS[cfg.cameraScope] ?? '—'}</span>
+            )}
           </div>
         </div>
         <Image src="/assets/logo-mark.png" alt="SecuraCore" width={48} height={48} className="summary-mark" />

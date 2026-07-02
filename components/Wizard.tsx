@@ -62,6 +62,7 @@ function CheckDone() {
 
 export function Wizard() {
   const [step, setStep] = useState(0);
+  const [mode, setMode] = useState<'guided' | 'custom'>('guided');
   const [cfg, setCfg] = useState<SystemConfig>(DEFAULT_CONFIG);
   const [estimateUnlocked, setEstimateUnlocked] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -187,9 +188,29 @@ export function Wizard() {
 
   function goBack() {
     if (step > 0) {
-      setStep(s => s - 1);
+      // Custom builders skip straight from Step 1 to the summary, so "Edit
+      // Selections" returns them to Step 1 rather than the unused tier/scope steps.
+      setStep(s => (mode === 'custom' ? 0 : s - 1));
       setAnimKey(k => k + 1);
     }
+  }
+
+  // "Let SecuraCore Design My System" — the guided tier → scope → summary flow.
+  function startGuided() {
+    setMode('guided');
+    goNext();
+  }
+
+  // "Build My Own System" — jump to the equipment list with nothing preselected.
+  // With no tier set, the summary renders the full catalog at qty 0 to build up.
+  function startCustom() {
+    if (!canAdvance(0, cfg)) return;
+    // Clear any tier/scope left over from exploring the guided path so the
+    // summary starts as a truly blank catalog (all quantities 0).
+    setCfg(p => ({ ...p, tier: null, cameraScope: null }));
+    setMode('custom');
+    setStep(3);
+    setAnimKey(k => k + 1);
   }
 
   function restart() {
@@ -197,6 +218,7 @@ export function Wizard() {
     clearUnlockKey();
     setEstimateUnlocked(false);
     setCfg(DEFAULT_CONFIG);
+    setMode('guided');
     setStep(0);
     setAnimKey(k => k + 1);
     setShowModal(false);
@@ -258,9 +280,19 @@ export function Wizard() {
           )}
 
           {/* Navigation */}
-          {step < 3 ? (
+          {step === 0 ? (
+            <div className="wiz-choice-btns">
+              <button className="btn-next" onClick={startGuided} disabled={!canAdvance(0, cfg)}>
+                Let SecuraCore Design My System
+                <ArrowRight />
+              </button>
+              <button className="btn-secondary" onClick={startCustom} disabled={!canAdvance(0, cfg)}>
+                Build My Own System
+              </button>
+            </div>
+          ) : step < 3 ? (
             <div className="wiz-nav-btns">
-              <button className="btn-back" onClick={goBack} style={{ visibility: step === 0 ? 'hidden' : 'visible' }}>
+              <button className="btn-back" onClick={goBack}>
                 <ArrowLeft />
                 Back
               </button>
