@@ -97,11 +97,6 @@ export function Step4InvestmentSummary({ cfg, equipment, qtys, setQty, estimateU
 
   const hasSelection = equipment.some(item => (qtys[item.name] ?? item.baseQty) > 0);
 
-  // Live count, not cfg.doors: "Door Sensors" is independently editable via
-  // its own qty stepper below, so the header chip must track that value or
-  // it can disagree with what's actually priced and sent to the CRM.
-  const doorCount = qtys['Door Sensors'] ?? equipment.find(item => item.name === 'Door Sensors')?.baseQty ?? 0;
-
   const placeholder =
     (cfg.tier && PLACEHOLDER_BY_TIER[cfg.tier]) || DEFAULT_PLACEHOLDER;
 
@@ -128,9 +123,6 @@ export function Step4InvestmentSummary({ cfg, equipment, qtys, setQty, estimateU
           <h2 className="step-title">{cfg.tier ? `${cfg.tier} Package` : 'Custom System'}</h2>
           <div className="config-chips">
             <span className="config-chip">{HOME_TYPE_LABELS[cfg.homeType!] ?? '—'}</span>
-            <span className="config-chip">
-              {doorCount}{doorCount !== 1 ? ' Doors' : ' Door'}
-            </span>
             <span className="config-chip">
               {cfg.homeSize ? HOME_SIZE_LABELS[cfg.homeSize] ?? cfg.homeSize : '—'}
             </span>
